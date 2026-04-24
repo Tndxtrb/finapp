@@ -702,16 +702,16 @@ async function delSav(id){
 }
 
 async function addReminder(endless=false){
+  const isEndless = endless === true || endless === 'true';
   const text=document.getElementById('rem-inp').value.trim();
   const tag=document.getElementById('rem-tag').value;
   const date=document.getElementById('rem-date').value;
   if(!text){toast('Введи текст');return;}
-  if(!endless && !date){toast('Выбери дату или нажми "Бессрочно"');return;}
-  const due_date = endless ? null : date;
+  if(!isEndless && !date){toast('Выбери дату или нажми "Бессрочно"');return;}
+  const due_date = isEndless ? null : date;
   const r=await apiFetch('POST',`/api/reminders?profile_id=${currentProfile.id}`,{text,tag,due_date});
   allRem.unshift(r);
   document.getElementById('rem-inp').value='';
-  document.getElementById('rem-date').value='';
   renderReminders(); toast('Добавлено!');
 }
 
