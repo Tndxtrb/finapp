@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f0f0f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Финансы">
+<link rel="manifest" href="/static/manifest.json">
+<title>Финансы</title>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0f0f0f; --bg2:#181818; --bg3:#222; --bg4:#2a2a2a;
+  --border:rgba(255,255,255,0.07); --border2:rgba(255,255,255,0.13);
+  --text:#f0f0f0; --muted:#666; --muted2:#888;
+  --green:#4ade80; --red:#f87171; --blue:#60a5fa;
+  --amber:#fbbf24; --purple:#a78bfa; --teal:#2dd4bf;
+  --r:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Onest',sans-serif;font-size:15px;overscroll-behavior:none}
+
+/* Profile picker screen */
+#profile-screen{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem}
+#profile-screen.hidden{display:none}
+.ps-logo{font-size:40px;margin-bottom:1.5rem}
+.ps-title{font-size:22px;font-weight:600;margin-bottom:6px;text-align:center}
+.ps-sub{font-size:14px;color:var(--muted2);margin-bottom:2rem;text-align:center}
+.profiles-list{width:100%;max-width:320px;display:flex;flex-direction:column;gap:10px;margin-bottom:1.5rem}
+.profile-btn{width:100%;padding:16px 20px;border-radius:14px;border:0.5px solid var(--border2);background:var(--bg2);color:var(--text);font-size:16px;font-weight:500;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:12px;transition:background 0.15s}
+.profile-btn:active{background:var(--bg3)}
+.profile-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;flex-shrink:0}
+.ps-divider{color:var(--muted);font-size:12px;margin-bottom:1rem}
+.ps-new{display:flex;gap:8px;width:100%;max-width:320px}
+.ps-new input{flex:1;background:var(--bg2);border:0.5px solid var(--border2);border-radius:10px;padding:12px 14px;color:var(--text);font-size:14px;font-family:inherit;outline:none}
+.ps-new button{padding:12px 16px;border-radius:10px;background:var(--text);color:var(--bg);font-size:14px;font-weight:600;border:none;cursor:pointer;font-family:inherit}
+
+/* Main app */
+.app{display:flex;flex-direction:column;height:100dvh;max-width:480px;margin:0 auto}
+
+/* Header */
+.header{padding:14px 16px 10px;padding-top:calc(14px + env(safe-area-inset-top));background:var(--bg);border-bottom:0.5px solid var(--border);flex-shrink:0}
+.header-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.profile-badge{display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--bg2);border:0.5px solid var(--border2);border-radius:20px;padding:6px 12px 6px 6px}
+.pb-avatar{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600}
+.pb-name{font-size:13px;font-weight:500}
+.pb-arrow{font-size:10px;color:var(--muted)}
+.sync-btn{font-size:11px;color:var(--muted2);background:var(--bg2);border:0.5px solid var(--border);border-radius:20px;padding:5px 12px;cursor:pointer;font-family:inherit}
+.sync-btn.spin{color:var(--blue)}
+
+.bal-label{font-size:11px;color:var(--muted);text-align:center;margin-bottom:3px}
+.bal-amount{font-size:32px;font-weight:700;text-align:center;letter-spacing:-1px}
+.bal-pos{color:var(--green)} .bal-neg{color:var(--red)}
+.mini-row{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}
+.mini-c{background:var(--bg2);border-radius:9px;padding:8px 10px}
+.mini-l{font-size:10px;color:var(--muted);margin-bottom:3px}
+.mini-v{font-size:13px;font-weight:600}
+
+/* Content */
+.content{flex:1;overflow-y:auto;padding:14px;padding-bottom:85px}
+
+/* Bottom nav - 5 tabs */
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--bg);border-top:0.5px solid var(--border);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:100}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:9px 0 7px;cursor:pointer;gap:3px}
+.nav-icon{font-size:18px;line-height:1}
+.nav-label{font-size:9px;color:var(--muted)}
+.nav-item.active .nav-label{color:var(--text)}
+
+/* Sections */
+.section{display:none}
+.section.active{display:block}
+
+/* Cards & forms */
+.card{background:var(--bg2);border-radius:var(--r);padding:14px;margin-bottom:10px;border:0.5px solid var(--border)}
+.card-title{font-size:12px;color:var(--muted);font-weight:500;margin-bottom:10px}
+.inp{width:100%;background:var(--bg3);border:0.5px solid var(--border2);border-radius:9px;padding:10px 12px;color:var(--text);font-size:14px;font-family:inherit;outline:none;margin-bottom:7px}
+.inp:focus{border-color:rgba(255,255,255,.25)}
+.inp-row{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:7px}
+.inp2{width:100%;background:var(--bg3);border:0.5px solid var(--border2);border-radius:9px;padding:10px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none}
+.big-btn{width:100%;padding:12px;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;border:none;background:var(--text);color:var(--bg);font-family:inherit}
+.big-btn:active{opacity:0.8}
+
+/* Type toggle */
+.type-row{display:flex;gap:7px;margin-bottom:10px}
+.type-pill{flex:1;text-align:center;padding:8px;border-radius:9px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg3);color:var(--muted);border:0.5px solid var(--border)}
+.pill-exp{background:rgba(248,113,113,.12);color:var(--red);border-color:rgba(248,113,113,.25)}
+.pill-inc{background:rgba(74,222,128,.12);color:var(--green);border-color:rgba(74,222,128,.25)}
+
+/* Transactions */
+.tx-list-card{background:var(--bg2);border-radius:var(--r);border:0.5px solid var(--border);overflow:hidden;margin-bottom:8px}
+.tx-item{display:flex;align-items:center;gap:10px;padding:11px 13px;border-bottom:0.5px solid var(--border)}
+.tx-item:last-child{border-bottom:none}
+.tx-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.dot-g{background:var(--green)} .dot-r{background:var(--red)}
+.tx-info{flex:1;min-width:0}
+.tx-n{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tx-m{font-size:10px;color:var(--muted);margin-top:1px}
+.tx-a{font-size:13px;font-weight:600;flex-shrink:0}
+.tx-ag{color:var(--green)} .tx-ar{color:var(--red)}
+.tx-del{background:none;border:none;color:var(--muted);font-size:17px;cursor:pointer;padding:0 4px;flex-shrink:0}
+.tx-del:active{color:var(--red)}
+.sect-lbl{font-size:11px;color:var(--muted);font-weight:500;margin-bottom:8px;margin-top:2px}
+
+/* Savings */
+.sav-card{background:var(--bg2);border-radius:var(--r);padding:13px;margin-bottom:8px;border:0.5px solid var(--border)}
+.sav-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.sav-name{font-size:14px;font-weight:600}
+.sav-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.sav-pct{font-size:16px;font-weight:700}
+.prog{background:var(--bg3);border-radius:3px;height:6px;overflow:hidden;margin-bottom:9px}
+.prog-fill{height:100%;border-radius:3px;transition:width .4s}
+.sav-foot{display:flex;gap:7px}
+.sav-inp{flex:1;background:var(--bg3);border:0.5px solid var(--border2);border-radius:8px;padding:8px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none}
+.btn-green{padding:8px 12px;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;border:none;font-family:inherit;background:rgba(74,222,128,.12);color:var(--green)}
+.btn-red{padding:8px 10px;border-radius:8px;font-size:12px;cursor:pointer;border:none;font-family:inherit;background:rgba(248,113,113,.1);color:var(--red)}
+
+/* Reminders */
+.rem-list-card{background:var(--bg2);border-radius:var(--r);border:0.5px solid var(--border);overflow:hidden}
+.rem-item{display:flex;align-items:center;gap:10px;padding:12px 13px;border-bottom:0.5px solid var(--border)}
+.rem-item:last-child{border-bottom:none}
+.chk{width:20px;height:20px;border-radius:5px;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:11px}
+.chk-done{background:var(--green);border-color:var(--green);color:#000}
+.rem-info{flex:1}
+.rem-t{font-size:13px;font-weight:500}
+.rem-t.done{text-decoration:line-through;color:var(--muted)}
+.tag{font-size:10px;padding:2px 7px;border-radius:20px;margin-top:3px;display:inline-block}
+.tag-u{background:rgba(248,113,113,.12);color:var(--red)}
+.tag-s{background:rgba(251,191,36,.12);color:var(--amber)}
+.tag-p{background:rgba(96,165,250,.12);color:var(--blue)}
+.rem-del{background:none;border:none;color:var(--muted);font-size:17px;cursor:pointer}
+
+/* Joint tab */
+.joint-header{background:var(--bg2);border-radius:var(--r);padding:14px;margin-bottom:10px;border:0.5px solid var(--border)}
+.joint-total-label{font-size:11px;color:var(--muted);text-align:center;margin-bottom:4px}
+.joint-total{font-size:28px;font-weight:700;text-align:center;letter-spacing:-0.5px;margin-bottom:12px}
+.joint-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}
+.joint-stat{background:var(--bg3);border-radius:9px;padding:8px 10px;text-align:center}
+.joint-stat-l{font-size:9px;color:var(--muted);margin-bottom:3px}
+.joint-stat-v{font-size:13px;font-weight:600}
+
+.profile-section{margin-bottom:14px}
+.profile-section-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.ps-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.ps-name{font-size:13px;font-weight:600}
+.ps-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px}
+.ps-stat{background:var(--bg2);border-radius:9px;padding:8px 10px;border:0.5px solid var(--border)}
+.ps-stat-l{font-size:9px;color:var(--muted);margin-bottom:2px}
+.ps-stat-v{font-size:13px;font-weight:600}
+.ps-tx-mini{background:var(--bg2);border-radius:10px;border:0.5px solid var(--border);overflow:hidden}
+.ps-tx-item{display:flex;align-items:center;gap:8px;padding:9px 11px;border-bottom:0.5px solid var(--border);font-size:12px}
+.ps-tx-item:last-child{border-bottom:none}
+
+.chart-card{background:var(--bg2);border-radius:var(--r);padding:14px;margin-bottom:10px;border:0.5px solid var(--border)}
+
+/* Toast */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--bg3);border:0.5px solid var(--border2);color:var(--text);padding:10px 20px;border-radius:20px;font-size:13px;z-index:999;opacity:0;transition:all .25s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.empty{text-align:center;padding:28px 16px;color:var(--muted);font-size:13px}
+
+/* Color swatches for new profile */
+.color-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.color-swatch{width:28px;height:28px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:border .15s}
+.color-swatch.selected{border-color:var(--text)}
+</style>
+</head>
+<body>
+
+<!-- Profile picker -->
+<div id="profile-screen">
+  <div class="ps-logo">💰</div>
+  <div class="ps-title">Выбери профиль</div>
+  <div class="ps-sub">Данные у каждого свои, но можно смотреть общую картину</div>
+  <div class="profiles-list" id="profiles-list"></div>
+  <div class="ps-divider">— или создай новый —</div>
+  <div style="width:100%;max-width:320px;margin-bottom:10px">
+    <div class="color-row" id="color-row"></div>
+    <div class="ps-new">
+      <input id="new-profile-name" placeholder="Имя профиля..." maxlength="20" />
+      <button onclick="createProfile()">Создать</button>
+    </div>
+  </div>
+</div>
+
+<!-- Main app -->
+<div class="app" id="main-app" style="display:none">
+  <div class="header">
+    <div class="header-top">
+      <div class="profile-badge" onclick="switchProfile()" id="profile-badge">
+        <div class="pb-avatar" id="pb-avatar"></div>
+        <span class="pb-name" id="pb-name">Загрузка...</span>
+        <span class="pb-arrow">▾</span>
+      </div>
+      <button class="sync-btn" id="sync-btn" onclick="loadAll()">↻ Обновить</button>
+    </div>
+    <div class="bal-label">Баланс</div>
+    <div class="bal-amount bal-pos" id="balance-val">0 ₽</div>
+    <div class="mini-row">
+      <div class="mini-c"><div class="mini-l">Доходы</div><div class="mini-v" style="color:var(--green)" id="income-val">0 ₽</div></div>
+      <div class="mini-c"><div class="mini-l">Расходы</div><div class="mini-v" style="color:var(--red)" id="expense-val">0 ₽</div></div>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- HOME -->
+    <div id="sec-home" class="section active">
+      <div class="card">
+        <div class="card-title">Быстрое добавление</div>
+        <div class="type-row">
+          <div class="type-pill pill-exp" id="pill-exp" onclick="setType('expense')">— Расход</div>
+          <div class="type-pill" id="pill-inc" onclick="setType('income')">+ Доход</div>
+        </div>
+        <input class="inp" id="qa-name" placeholder="Название..." />
+        <div class="inp-row">
+          <input class="inp2" id="qa-amt" type="number" placeholder="Сумма ₽" />
+          <select class="inp2" id="qa-cat">
+            <option value="Еда">🍕 Еда</option>
+            <option value="Транспорт">🚗 Транспорт</option>
+            <option value="Развлечения">🎮 Развлечения</option>
+            <option value="Подписки">📱 Подписки</option>
+            <option value="Одежда">👕 Одежда</option>
+            <option value="Техника">💻 Техника</option>
+            <option value="Здоровье">💊 Здоровье</option>
+            <option value="Коммуналка">🏠 Коммуналка</option>
+            <option value="Зарплата">💼 Зарплата</option>
+            <option value="Подработка">🔧 Подработка</option>
+            <option value="Другое">📦 Другое</option>
+          </select>
+        </div>
+        <button class="big-btn" onclick="addTransaction()">Добавить</button>
+      </div>
+      <div class="sect-lbl">Последние транзакции</div>
+      <div id="home-tx"></div>
+      <div class="chart-card">
+        <div class="card-title">Расходы по категориям</div>
+        <canvas id="catChart" height="170"></canvas>
+      </div>
+      <div class="card" id="insights-card">
+        <div class="card-title">Советы по экономии</div>
+        <div id="insights"></div>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div id="sec-history" class="section">
+      <div class="sect-lbl">Все транзакции</div>
+      <div id="all-tx"></div>
+    </div>
+
+    <!-- SAVINGS -->
+    <div id="sec-savings" class="section">
+      <div class="card">
+        <div class="card-title">Новая цель накоплений</div>
+        <input class="inp" id="ns-name" placeholder="Название цели..." />
+        <div class="inp-row">
+          <input class="inp2" id="ns-target" type="number" placeholder="Нужно ₽" />
+          <input class="inp2" id="ns-current" type="number" placeholder="Уже есть ₽" />
+        </div>
+        <button class="big-btn" onclick="addSaving()">Создать цель</button>
+      </div>
+      <div id="savings-list"></div>
+    </div>
+
+    <!-- REMINDERS -->
+    <div id="sec-reminders" class="section">
+      <div class="card">
+        <input class="inp" id="rem-inp" placeholder="Что нужно сделать или купить..." />
+        <div class="inp-row" style="margin-bottom:0">
+          <select class="inp2" id="rem-tag">
+            <option value="urgent">🔴 Срочно</option>
+            <option value="soon">🟡 Скоро</option>
+            <option value="plan">🔵 Планирую</option>
+          </select>
+          <button class="big-btn" onclick="addReminder()">+ Добавить</button>
+        </div>
+      </div>
+      <div id="rem-list"></div>
+    </div>
+
+    <!-- JOINT -->
+    <div id="sec-joint" class="section">
+      <div class="joint-header" id="joint-header"></div>
+      <div id="joint-profiles"></div>
+      <div class="chart-card">
+        <div class="card-title">Расходы вместе</div>
+        <canvas id="jointChart" height="180"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <div class="nav-item active" onclick="switchTab('home')" id="nav-home"><div class="nav-icon">🏠</div><div class="nav-label">Главная</div></div>
+    <div class="nav-item" onclick="switchTab('history')" id="nav-history"><div class="nav-icon">📋</div><div class="nav-label">История</div></div>
+    <div class="nav-item" onclick="switchTab('savings')" id="nav-savings"><div class="nav-icon">🎯</div><div class="nav-label">Цели</div></div>
+    <div class="nav-item" onclick="switchTab('reminders')" id="nav-reminders"><div class="nav-icon">🔔</div><div class="nav-label">Дела</div></div>
+    <div class="nav-item" onclick="switchTab('joint')" id="nav-joint"><div class="nav-icon">👫</div><div class="nav-label">Совместно</div></div>
+  </nav>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const API = '';
+const COLORS = ['#60a5fa','#4ade80','#fbbf24','#f87171','#a78bfa','#2dd4bf','#fb923c','#e879f9'];
+const PROFILE_COLORS = ['#60a5fa','#f87171','#4ade80','#fbbf24','#a78bfa','#2dd4bf','#fb923c'];
+let selColor = PROFILE_COLORS[0];
+
+let currentProfile = null;
+let allProfiles = [];
+let allTx = [], allSav = [], allRem = [];
+let txType = 'expense';
+let catChartInst = null, jointChartInst = null;
+
+function fmt(n){ return Math.round(n).toLocaleString('ru-RU') + ' ₽'; }
+function initials(name){ return name.slice(0,2).toUpperCase(); }
+
+function toast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 2000);
+}
+
+async function apiFetch(method, path, body){
+  const opts = {method, headers:{'Content-Type':'application/json'}};
+  if(body) opts.body = JSON.stringify(body);
+  const r = await fetch(API + path, opts);
+  if(!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+// --- Profile screen ---
+function renderColorRow(){
+  const el = document.getElementById('color-row');
+  el.innerHTML = PROFILE_COLORS.map(c=>`
+    <div class="color-swatch ${c===selColor?'selected':''}" style="background:${c}" onclick="selectColor('${c}')"></div>
+  `).join('');
+}
+
+function selectColor(c){ selColor=c; renderColorRow(); }
+
+async function loadProfiles(){
+  allProfiles = await apiFetch('GET','/api/profiles');
+  renderProfileScreen();
+}
+
+function renderProfileScreen(){
+  const el = document.getElementById('profiles-list');
+  if(!allProfiles.length){
+    el.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center">Нет профилей — создай первый</div>';
+    return;
+  }
+  el.innerHTML = allProfiles.map(p=>`
+    <button class="profile-btn" onclick="selectProfile('${p.id}')">
+      <div class="profile-avatar" style="background:${p.color}20;color:${p.color}">${initials(p.name)}</div>
+      <span style="flex:1">${p.name}</span>
+      <span style="font-size:12px;color:var(--muted)">→</span>
+    </button>
+  `).join('');
+}
+
+function selectProfile(id){
+  currentProfile = allProfiles.find(p=>p.id===id);
+  localStorage.setItem('profile_id', id);
+  document.getElementById('profile-screen').classList.add('hidden');
+  document.getElementById('main-app').style.display = 'flex';
+  updateProfileBadge();
+  loadAll();
+}
+
+function switchProfile(){
+  document.getElementById('profile-screen').classList.remove('hidden');
+  document.getElementById('main-app').style.display = 'none';
+  loadProfiles();
+}
+
+async function createProfile(){
+  const name = document.getElementById('new-profile-name').value.trim();
+  if(!name){ toast('Введи имя'); return; }
+  const p = await apiFetch('POST','/api/profiles',{name, color: selColor});
+  allProfiles = allProfiles.filter(x=>x.id!==p.id);
+  allProfiles.push(p);
+  document.getElementById('new-profile-name').value='';
+  currentProfile = p;
+  localStorage.setItem('profile_id', p.id);
+  document.getElementById('profile-screen').classList.add('hidden');
+  document.getElementById('main-app').style.display = 'flex';
+  updateProfileBadge();
+  loadAll();
+}
+
+function updateProfileBadge(){
+  if(!currentProfile) return;
+  const av = document.getElementById('pb-avatar');
+  av.textContent = initials(currentProfile.name);
+  av.style.background = currentProfile.color + '25';
+  av.style.color = currentProfile.color;
+  document.getElementById('pb-name').textContent = currentProfile.name;
+}
+
+// --- Data loading ---
+async function loadAll(){
+  if(!currentProfile) return;
+  const btn = document.getElementById('sync-btn');
+  btn.textContent = '↻ ...'; btn.classList.add('spin');
+  const pid = currentProfile.id;
+  try {
+    [allTx, allSav, allRem] = await Promise.all([
+      apiFetch('GET', `/api/transactions?profile_id=${pid}`),
+      apiFetch('GET', `/api/savings?profile_id=${pid}`),
+      apiFetch('GET', `/api/reminders?profile_id=${pid}`)
+    ]);
+    renderAll();
+  } catch(e){ toast('Ошибка загрузки'); }
+  btn.textContent = '↻ Обновить'; btn.classList.remove('spin');
+}
+
+function renderAll(){
+  renderHeader(); renderHomeTx(); renderAllTx();
+  renderSavings(); renderReminders(); renderCatChart(); renderInsights();
+}
+
+function renderHeader(){
+  const inc = allTx.filter(t=>t.type==='income').reduce((a,t)=>a+t.amount,0);
+  const exp = allTx.filter(t=>t.type==='expense').reduce((a,t)=>a+t.amount,0);
+  const bal = inc - exp;
+  const bel = document.getElementById('balance-val');
+  bel.textContent = fmt(Math.abs(bal));
+  bel.className = 'bal-amount ' + (bal>=0?'bal-pos':'bal-neg');
+  document.getElementById('income-val').textContent = fmt(inc);
+  document.getElementById('expense-val').textContent = fmt(exp);
+}
+
+function txHTML(t, del=true){
+  return `<div class="tx-item">
+    <div class="tx-dot ${t.type==='income'?'dot-g':'dot-r'}"></div>
+    <div class="tx-info"><div class="tx-n">${t.name}</div><div class="tx-m">${t.category} · ${t.date}</div></div>
+    <div class="tx-a ${t.type==='income'?'tx-ag':'tx-ar'}">${t.type==='income'?'+':'-'}${fmt(t.amount)}</div>
+    ${del?`<button class="tx-del" onclick="delTx('${t.id}')">×</button>`:''}
+  </div>`;
+}
+
+function renderHomeTx(){
+  const el = document.getElementById('home-tx');
+  const r = allTx.slice(0,5);
+  el.innerHTML = r.length ? `<div class="tx-list-card">${r.map(t=>txHTML(t)).join('')}</div>` : '<div class="empty">Транзакций пока нет</div>';
+}
+
+function renderAllTx(){
+  const el = document.getElementById('all-tx');
+  el.innerHTML = allTx.length ? `<div class="tx-list-card">${allTx.map(t=>txHTML(t)).join('')}</div>` : '<div class="empty">Транзакций пока нет</div>';
+}
+
+function renderSavings(){
+  const el = document.getElementById('savings-list');
+  if(!allSav.length){ el.innerHTML='<div class="empty">Нет целей. Добавь первую!</div>'; return; }
+  el.innerHTML = allSav.map((s,i)=>{
+    const pct = Math.min(Math.round(s.current/s.target*100),100);
+    const c = COLORS[i%COLORS.length];
+    return `<div class="sav-card">
+      <div class="sav-top">
+        <div><div class="sav-name">${s.name}</div><div class="sav-sub">${fmt(s.current)} из ${fmt(s.target)}</div></div>
+        <div class="sav-pct" style="color:${c}">${pct}%</div>
+      </div>
+      <div class="prog"><div class="prog-fill" style="width:${pct}%;background:${c}"></div></div>
+      <div class="sav-foot">
+        <input class="sav-inp" type="number" placeholder="Пополнить ₽" id="sav-${s.id}" />
+        <button class="btn-green" onclick="addToSav('${s.id}')">+ Внести</button>
+        <button class="btn-red" onclick="delSav('${s.id}')">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderReminders(){
+  const el = document.getElementById('rem-list');
+  if(!allRem.length){ el.innerHTML='<div class="empty">Список дел пуст</div>'; return; }
+  const lbl = {urgent:'Срочно',soon:'Скоро',plan:'Планирую'};
+  el.innerHTML = `<div class="rem-list-card">${allRem.map(r=>`
+    <div class="rem-item">
+      <div class="chk ${r.done?'chk-done':''}" onclick="toggleRem('${r.id}',${!r.done})">${r.done?'✓':''}</div>
+      <div class="rem-info"><div class="rem-t ${r.done?'done':''}">${r.text}</div><span class="tag tag-${r.tag}">${lbl[r.tag]}</span></div>
+      <button class="rem-del" onclick="delRem('${r.id}')">×</button>
+    </div>`).join('')}</div>`;
+}
+
+function renderCatChart(){
+  const cats={};
+  allTx.filter(t=>t.type==='expense').forEach(t=>{cats[t.category]=(cats[t.category]||0)+t.amount});
+  const labels=Object.keys(cats), data=labels.map(k=>cats[k]);
+  const ctx=document.getElementById('catChart');
+  if(catChartInst) catChartInst.destroy();
+  catChartInst = new Chart(ctx,{
+    type:'doughnut',
+    data:{labels:labels.length?labels:['Нет данных'],datasets:[{data:data.length?data:[1],backgroundColor:labels.length?COLORS.slice(0,labels.length):['#333'],borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#888',font:{size:11,family:'Onest'},boxWidth:10,padding:8}}}}
+  });
+}
+
+function renderInsights(){
+  const inc=allTx.filter(t=>t.type==='income').reduce((a,t)=>a+t.amount,0);
+  const exp=allTx.filter(t=>t.type==='expense').reduce((a,t)=>a+t.amount,0);
+  const cats={};
+  allTx.filter(t=>t.type==='expense').forEach(t=>{cats[t.category]=(cats[t.category]||0)+t.amount});
+  const sorted=Object.entries(cats).sort((a,b)=>b[1]-a[1]);
+  const ins=[];
+  if(sorted.length) ins.push({i:'📊',t:`Больше всего трат на <strong>${sorted[0][0]}</strong> — ${fmt(sorted[0][1])}`});
+  if(inc>0){
+    const pct=Math.round(exp/inc*100);
+    if(pct>90) ins.push({i:'⚠️',t:`Расходы <strong>${pct}%</strong> от доходов. Высоковато!`});
+    else if(pct<70) ins.push({i:'✅',t:`Свободных <strong>${fmt(inc-exp)}</strong> — пополни накопления!`});
+  }
+  if(!ins.length) ins.push({i:'💡',t:'Добавь транзакции, чтобы увидеть советы.'});
+  document.getElementById('insights').innerHTML = ins.map(x=>`
+    <div style="display:flex;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--border)">
+      <span style="font-size:13px;width:18px;flex-shrink:0">${x.i}</span>
+      <span style="font-size:12px;color:var(--muted2);line-height:1.5">${x.t}</span>
+    </div>`).join('');
+}
+
+// --- Joint tab ---
+async function loadJoint(){
+  try {
+    const data = await apiFetch('GET','/api/joint');
+    renderJoint(data);
+  } catch(e){ toast('Ошибка загрузки'); }
+}
+
+function renderJoint(data){
+  const totalInc = data.reduce((a,d)=>a+d.income,0);
+  const totalExp = data.reduce((a,d)=>a+d.expense,0);
+  const totalBal = totalInc - totalExp;
+  const totalSaved = data.reduce((a,d)=>a+d.saved,0);
+
+  document.getElementById('joint-header').innerHTML = `
+    <div class="joint-total-label">Общий баланс</div>
+    <div class="joint-total" style="color:${totalBal>=0?'var(--green)':'var(--red)'}">${fmt(Math.abs(totalBal))}</div>
+    <div class="joint-row">
+      <div class="joint-stat"><div class="joint-stat-l">Доходы</div><div class="joint-stat-v" style="color:var(--green)">${fmt(totalInc)}</div></div>
+      <div class="joint-stat"><div class="joint-stat-l">Расходы</div><div class="joint-stat-v" style="color:var(--red)">${fmt(totalExp)}</div></div>
+      <div class="joint-stat"><div class="joint-stat-l">Накоплено</div><div class="joint-stat-v" style="color:var(--amber)">${fmt(totalSaved)}</div></div>
+    </div>`;
+
+  document.getElementById('joint-profiles').innerHTML = data.map(d=>{
+    const c = d.profile.color;
+    return `<div class="profile-section">
+      <div class="profile-section-header">
+        <div class="ps-dot" style="background:${c}"></div>
+        <div class="ps-name">${d.profile.name}</div>
+      </div>
+      <div class="ps-stats">
+        <div class="ps-stat"><div class="ps-stat-l">Доходы</div><div class="ps-stat-v" style="color:var(--green)">${fmt(d.income)}</div></div>
+        <div class="ps-stat"><div class="ps-stat-l">Расходы</div><div class="ps-stat-v" style="color:var(--red)">${fmt(d.expense)}</div></div>
+        <div class="ps-stat"><div class="ps-stat-l">Баланс</div><div class="ps-stat-v" style="color:${d.balance>=0?'var(--blue)':'var(--red)'}">${fmt(d.balance)}</div></div>
+        <div class="ps-stat"><div class="ps-stat-l">Накоплено</div><div class="ps-stat-v" style="color:var(--amber)">${fmt(d.saved)}</div></div>
+      </div>
+      ${d.recent_tx.length?`<div class="ps-tx-mini">${d.recent_tx.map(t=>`
+        <div class="ps-tx-item">
+          <div class="tx-dot ${t.type==='income'?'dot-g':'dot-r'}" style="width:6px;height:6px;border-radius:50%;flex-shrink:0"></div>
+          <span style="flex:1;color:var(--text)">${t.name}</span>
+          <span style="color:var(--muted)">${t.category}</span>
+          <span style="font-weight:600;margin-left:8px;color:${t.type==='income'?'var(--green)':'var(--red)'}">${t.type==='income'?'+':'-'}${fmt(t.amount)}</span>
+        </div>`).join('')}</div>`:''}
+    </div>`;
+  }).join('');
+
+  // Joint chart - grouped bar per profile
+  const allCats = [...new Set(data.flatMap(d=>Object.keys(d.by_category)))];
+  const ctx = document.getElementById('jointChart');
+  if(jointChartInst) jointChartInst.destroy();
+  if(allCats.length){
+    jointChartInst = new Chart(ctx, {
+      type:'bar',
+      data:{
+        labels: allCats,
+        datasets: data.map((d,i)=>({
+          label: d.profile.name,
+          data: allCats.map(c=>Math.round(d.by_category[c]||0)),
+          backgroundColor: d.profile.color + 'bb',
+          borderRadius: 4
+        }))
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{position:'top',labels:{color:'#888',font:{size:11,family:'Onest'},boxWidth:10,padding:8}}},
+        scales:{x:{ticks:{color:'#666',font:{size:10}},grid:{color:'rgba(255,255,255,.05)'}},y:{ticks:{color:'#666',font:{size:10},callback:v=>v>=1000?Math.round(v/1000)+'к':v},grid:{color:'rgba(255,255,255,.05)'}}}
+      }
+    });
+  }
+}
+
+// --- Actions ---
+function setType(t){
+  txType=t;
+  document.getElementById('pill-exp').className='type-pill'+(t==='expense'?' pill-exp':'');
+  document.getElementById('pill-inc').className='type-pill'+(t==='income'?' pill-inc':'');
+}
+
+async function addTransaction(){
+  const name=document.getElementById('qa-name').value.trim();
+  const amt=parseFloat(document.getElementById('qa-amt').value);
+  const cat=document.getElementById('qa-cat').value;
+  if(!name||!amt||amt<=0){toast('Заполни название и сумму');return;}
+  const tx = await apiFetch('POST',`/api/transactions?profile_id=${currentProfile.id}`,{name,amount:amt,category:cat,type:txType});
+  allTx.unshift(tx);
+  document.getElementById('qa-name').value='';
+  document.getElementById('qa-amt').value='';
+  renderAll(); toast('Добавлено!');
+}
+
+async function delTx(id){
+  await apiFetch('DELETE',`/api/transactions/${id}`);
+  allTx=allTx.filter(t=>t.id!==id); renderAll();
+}
+
+async function addSaving(){
+  const name=document.getElementById('ns-name').value.trim();
+  const target=parseFloat(document.getElementById('ns-target').value);
+  const current=parseFloat(document.getElementById('ns-current').value)||0;
+  if(!name||!target){toast('Заполни название и сумму');return;}
+  const s=await apiFetch('POST',`/api/savings?profile_id=${currentProfile.id}`,{name,target,current});
+  allSav.push(s);
+  document.getElementById('ns-name').value='';
+  document.getElementById('ns-target').value='';
+  document.getElementById('ns-current').value='';
+  renderSavings(); toast('Цель создана!');
+}
+
+async function addToSav(id){
+  const amt=parseFloat(document.getElementById(`sav-${id}`).value);
+  if(!amt||amt<=0){toast('Введи сумму');return;}
+  const res=await apiFetch('PATCH',`/api/savings/${id}/add`,{amount:amt});
+  const s=allSav.find(x=>x.id===id); if(s) s.current=res.current;
+  renderSavings(); toast('Пополнено!');
+}
+
+async function delSav(id){
+  await apiFetch('DELETE',`/api/savings/${id}`);
+  allSav=allSav.filter(s=>s.id!==id); renderSavings();
+}
+
+async function addReminder(){
+  const text=document.getElementById('rem-inp').value.trim();
+  const tag=document.getElementById('rem-tag').value;
+  if(!text){toast('Введи текст');return;}
+  const r=await apiFetch('POST',`/api/reminders?profile_id=${currentProfile.id}`,{text,tag});
+  allRem.unshift(r);
+  document.getElementById('rem-inp').value='';
+  renderReminders(); toast('Добавлено!');
+}
+
+async function toggleRem(id,done){
+  await apiFetch('PATCH',`/api/reminders/${id}`,{done});
+  const r=allRem.find(x=>x.id===id); if(r) r.done=done; renderReminders();
+}
+
+async function delRem(id){
+  await apiFetch('DELETE',`/api/reminders/${id}`);
+  allRem=allRem.filter(r=>r.id!==id); renderReminders();
+}
+
+function switchTab(tab){
+  ['home','history','savings','reminders','joint'].forEach(t=>{
+    document.getElementById(`sec-${t}`).classList.toggle('active',t===tab);
+    document.getElementById(`nav-${t}`).classList.toggle('active',t===tab);
+  });
+  if(tab==='joint') loadJoint();
+}
+
+// --- Init ---
+renderColorRow();
+
+async function init(){
+  await loadProfiles();
+  const savedId = localStorage.getItem('profile_id');
+  if(savedId){
+    const p = allProfiles.find(x=>x.id===savedId);
+    if(p){ selectProfile(p.id); return; }
+  }
+}
+
+if('serviceWorker' in navigator) navigator.serviceWorker.register('/static/sw.js');
+init();
+setInterval(()=>{ if(currentProfile) loadAll(); }, 30000);
+</script>
+</body>
+</html>
