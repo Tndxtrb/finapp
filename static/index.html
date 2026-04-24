@@ -163,6 +163,16 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Onest'
 .color-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
 .color-swatch{width:28px;height:28px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:border .15s}
 .color-swatch.selected{border-color:var(--text)}
+
+/* Planner */
+.day-group{margin-bottom:14px}
+.day-label{font-size:11px;font-weight:600;color:var(--muted2);margin-bottom:7px;display:flex;align-items:center;gap:6px;text-transform:uppercase;letter-spacing:.5px}
+.day-label.today{color:var(--blue)}
+.day-label.overdue{color:var(--red)}
+.day-badge{font-size:9px;padding:2px 6px;border-radius:20px;background:var(--bg3);color:var(--muted);font-weight:500}
+.day-badge.today{background:rgba(96,165,250,.15);color:var(--blue)}
+.day-badge.overdue{background:rgba(248,113,113,.12);color:var(--red)}
+input[type="date"]{color-scheme:dark}
 </style>
 </head>
 <body>
@@ -266,13 +276,17 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Onest'
     <div id="sec-reminders" class="section">
       <div class="card">
         <input class="inp" id="rem-inp" placeholder="Что нужно сделать или купить..." />
-        <div class="inp-row" style="margin-bottom:0">
+        <div class="inp-row" style="margin-bottom:7px">
           <select class="inp2" id="rem-tag">
             <option value="urgent">🔴 Срочно</option>
             <option value="soon">🟡 Скоро</option>
             <option value="plan">🔵 Планирую</option>
           </select>
-          <button class="big-btn" onclick="addReminder()">+ Добавить</button>
+          <input class="inp2" type="date" id="rem-date" />
+        </div>
+        <div style="display:flex;gap:7px">
+          <button class="big-btn" style="flex:1" onclick="addReminder(false)">+ С датой</button>
+          <button class="big-btn" style="flex:1;background:var(--bg3);color:var(--muted2);border:0.5px solid var(--border2)" onclick="addReminder(true)">Бессрочно</button>
         </div>
       </div>
       <div id="rem-list"></div>
@@ -477,12 +491,59 @@ function renderReminders(){
   const el = document.getElementById('rem-list');
   if(!allRem.length){ el.innerHTML='<div class="empty">Список дел пуст</div>'; return; }
   const lbl = {urgent:'Срочно',soon:'Скоро',plan:'Планирую'};
-  el.innerHTML = `<div class="rem-list-card">${allRem.map(r=>`
-    <div class="rem-item">
+  const today = new Date().toISOString().slice(0,10);
+  const tomorrow = new Date(Date.now()+86400000).toISOString().slice(0,10);
+
+  const withDate = allRem.filter(r=>r.due_date).sort((a,b)=>a.due_date.localeCompare(b.due_date));
+  const noDate = allRem.filter(r=>!r.due_date);
+
+  const groups = {};
+  withDate.forEach(r=>{
+    const d = r.due_date;
+    if(!groups[d]) groups[d]=[];
+    groups[d].push(r);
+  });
+
+  function dayLabel(d){
+    if(d===today) return {text:'Сегодня', cls:'today'};
+    if(d===tomorrow) return {text:'Завтра', cls:''};
+    if(d<today) return {text: formatDate(d) + ' — просрочено', cls:'overdue'};
+    return {text: formatDate(d), cls:''};
+  }
+
+  function formatDate(d){
+    const [y,m,day] = d.split('-');
+    const months = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+    return `${parseInt(day)} ${months[parseInt(m)-1]}`;
+  }
+
+  function remHTML(r){
+    return `<div class="rem-item">
       <div class="chk ${r.done?'chk-done':''}" onclick="toggleRem('${r.id}',${!r.done})">${r.done?'✓':''}</div>
       <div class="rem-info"><div class="rem-t ${r.done?'done':''}">${r.text}</div><span class="tag tag-${r.tag}">${lbl[r.tag]}</span></div>
       <button class="rem-del" onclick="delRem('${r.id}')">×</button>
-    </div>`).join('')}</div>`;
+    </div>`;
+  }
+
+  let html = '';
+  Object.entries(groups).forEach(([date, rems])=>{
+    const {text, cls} = dayLabel(date);
+    const count = rems.filter(r=>!r.done).length;
+    html += `<div class="day-group">
+      <div class="day-label ${cls}">${text}${count>0?` <span class="day-badge ${cls}">${count}</span>`:''}
+      </div>
+      <div class="rem-list-card">${rems.map(remHTML).join('')}</div>
+    </div>`;
+  });
+
+  if(noDate.length){
+    html += `<div class="day-group">
+      <div class="day-label">Бессрочные</div>
+      <div class="rem-list-card">${noDate.map(remHTML).join('')}</div>
+    </div>`;
+  }
+
+  el.innerHTML = html;
 }
 
 function renderCatChart(){
@@ -640,13 +701,17 @@ async function delSav(id){
   allSav=allSav.filter(s=>s.id!==id); renderSavings();
 }
 
-async function addReminder(){
+async function addReminder(endless=false){
   const text=document.getElementById('rem-inp').value.trim();
   const tag=document.getElementById('rem-tag').value;
+  const date=document.getElementById('rem-date').value;
   if(!text){toast('Введи текст');return;}
-  const r=await apiFetch('POST',`/api/reminders?profile_id=${currentProfile.id}`,{text,tag});
+  if(!endless && !date){toast('Выбери дату или нажми "Бессрочно"');return;}
+  const due_date = endless ? null : date;
+  const r=await apiFetch('POST',`/api/reminders?profile_id=${currentProfile.id}`,{text,tag,due_date});
   allRem.unshift(r);
   document.getElementById('rem-inp').value='';
+  document.getElementById('rem-date').value='';
   renderReminders(); toast('Добавлено!');
 }
 
@@ -666,6 +731,10 @@ function switchTab(tab){
     document.getElementById(`nav-${t}`).classList.toggle('active',t===tab);
   });
   if(tab==='joint') loadJoint();
+  if(tab==='reminders'){
+    const d = document.getElementById('rem-date');
+    if(!d.value) d.value = new Date().toISOString().slice(0,10);
+  }
 }
 
 // --- Init ---

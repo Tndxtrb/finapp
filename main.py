@@ -61,10 +61,17 @@ def init_db():
             text TEXT NOT NULL,
             tag TEXT NOT NULL,
             done INTEGER NOT NULL DEFAULT 0,
+            due_date TEXT,
             created_at TEXT NOT NULL
         );
     """)
     conn.commit()
+    # Migration: add due_date if not exists
+    try:
+        conn.execute("ALTER TABLE reminders ADD COLUMN due_date TEXT")
+        conn.commit()
+    except:
+        pass
     conn.close()
 
 init_db()
@@ -91,6 +98,7 @@ class SavingAdd(BaseModel):
 class Reminder(BaseModel):
     text: str
     tag: str
+    due_date: Optional[str] = None
 
 class ReminderToggle(BaseModel):
     done: bool
@@ -190,10 +198,10 @@ def list_reminders(profile_id: str = Query(...), db: sqlite3.Connection = Depend
 def add_reminder(r: Reminder, profile_id: str = Query(...), db: sqlite3.Connection = Depends(get_db)):
     uid = str(uuid.uuid4())
     now = datetime.now().isoformat()
-    db.execute("INSERT INTO reminders VALUES (?,?,?,?,?,?)",
-               (uid, profile_id, r.text, r.tag, 0, now))
+    db.execute("INSERT INTO reminders VALUES (?,?,?,?,?,?,?)",
+               (uid, profile_id, r.text, r.tag, 0, r.due_date, now))
     db.commit()
-    return {"id": uid, "profile_id": profile_id, **r.dict(), "done": False, "created_at": now}
+    return {"id": uid, "profile_id": profile_id, "text": r.text, "tag": r.tag, "done": False, "due_date": r.due_date, "created_at": now}
 
 @app.patch("/api/reminders/{rem_id}")
 def toggle_reminder(rem_id: str, body: ReminderToggle, db: sqlite3.Connection = Depends(get_db)):
