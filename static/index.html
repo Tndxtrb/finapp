@@ -204,6 +204,10 @@ input[type="date"]{color-scheme:dark}
       </div>
       <button class="sync-btn" id="sync-btn" onclick="loadAll()">↻ Обновить</button>
     </div>
+    <div style="display:flex;gap:6px;margin-bottom:10px">
+      <button class="sync-btn" id="notif-btn" onclick="requestPushPermission()" style="flex:1;text-align:center">🔔 Включить уведомления</button>
+      <button class="sync-btn" onclick="testPush()" style="font-size:10px">Тест</button>
+    </div>
     <div class="bal-label">Баланс</div>
     <div class="bal-amount bal-pos" id="balance-val">0 ₽</div>
     <div class="mini-row">
@@ -276,7 +280,7 @@ input[type="date"]{color-scheme:dark}
     <div id="sec-reminders" class="section">
       <div class="card">
         <input class="inp" id="rem-inp" placeholder="Что нужно сделать или купить..." />
-        <div class="inp-row" style="margin-bottom:7px">
+        <div class="inp-row" style="margin-bottom:8px">
           <select class="inp2" id="rem-tag">
             <option value="urgent">🔴 Срочно</option>
             <option value="soon">🟡 Скоро</option>
@@ -285,10 +289,26 @@ input[type="date"]{color-scheme:dark}
           <input class="inp2" type="date" id="rem-date" />
         </div>
         <div style="display:flex;gap:7px">
-          <button class="big-btn" style="flex:1" onclick="addReminder(false)">+ С датой</button>
-          <button class="big-btn" style="flex:1;background:var(--bg3);color:var(--muted2);border:0.5px solid var(--border2)" onclick="addReminder(true)">Бессрочно</button>
+          <button class="big-btn" style="flex:1" id="btn-with-date">+ С датой</button>
+          <button class="big-btn" style="flex:1;background:var(--bg3);color:var(--muted2);border:0.5px solid var(--border2)" id="btn-endless">Бессрочно</button>
         </div>
       </div>
+
+      <div id="week-planner" style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div style="font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.8px">ПЛАН НА НЕДЕЛЮ</div>
+          <div style="font-size:11px;color:var(--muted)" id="week-range"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px" id="week-grid"></div>
+      </div>
+
+      <div style="display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:2px" id="rem-filters">
+        <button onclick="setRemFilter('all')" id="rf-all" style="display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:500;white-space:nowrap;cursor:pointer;background:rgba(74,222,128,.1);border:1.5px solid #4ade80;color:#4ade80">☰ Все</button>
+        <button onclick="setRemFilter('urgent')" id="rf-urgent" style="display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:500;white-space:nowrap;cursor:pointer;background:var(--bg2);border:0.5px solid var(--border);color:var(--muted)"><span style="width:6px;height:6px;border-radius:50%;background:#f87171;display:inline-block"></span>Срочно</button>
+        <button onclick="setRemFilter('soon')" id="rf-soon" style="display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:500;white-space:nowrap;cursor:pointer;background:var(--bg2);border:0.5px solid var(--border);color:var(--muted)"><span style="width:6px;height:6px;border-radius:50%;background:#fbbf24;display:inline-block"></span>Скоро</button>
+        <button onclick="setRemFilter('endless')" id="rf-endless" style="display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:500;white-space:nowrap;cursor:pointer;background:var(--bg2);border:0.5px solid var(--border);color:var(--muted)">∞ Бессрочно</button>
+      </div>
+
       <div id="rem-list"></div>
     </div>
 
@@ -488,62 +508,51 @@ function renderSavings(){
 }
 
 function renderReminders(){
+  renderWeekPlanner();
   const el = document.getElementById('rem-list');
-  if(!allRem.length){ el.innerHTML='<div class="empty">Список дел пуст</div>'; return; }
-  const lbl = {urgent:'Срочно',soon:'Скоро',plan:'Планирую'};
+  let rems = [...allRem];
+  if(remFilter==='urgent') rems = rems.filter(r=>r.tag==='urgent');
+  else if(remFilter==='soon') rems = rems.filter(r=>r.tag==='soon');
+  else if(remFilter==='endless') rems = rems.filter(r=>!r.due_date);
+  if(!rems.length){ el.innerHTML='<div class="empty">Список дел пуст</div>'; return; }
   const today = new Date().toISOString().slice(0,10);
   const tomorrow = new Date(Date.now()+86400000).toISOString().slice(0,10);
-
-  const withDate = allRem.filter(r=>r.due_date).sort((a,b)=>a.due_date.localeCompare(b.due_date));
-  const noDate = allRem.filter(r=>!r.due_date);
-
-  const groups = {};
-  withDate.forEach(r=>{
-    const d = r.due_date;
-    if(!groups[d]) groups[d]=[];
-    groups[d].push(r);
-  });
-
+  const months = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+  function fmt2(d){ const [y,m,day]=d.split('-'); return `${parseInt(day)} ${months[parseInt(m)-1].toUpperCase()}`; }
   function dayLabel(d){
-    if(d===today) return {text:'Сегодня', cls:'today'};
-    if(d===tomorrow) return {text:'Завтра', cls:''};
-    if(d<today) return {text: formatDate(d) + ' — просрочено', cls:'overdue'};
-    return {text: formatDate(d), cls:''};
+    if(d<today) return {text:`${fmt2(d)} — ПРОСРОЧЕНО`,color:'var(--red)'};
+    if(d===today) return {text:'СЕГОДНЯ',color:'var(--blue)'};
+    if(d===tomorrow) return {text:`ЗАВТРА — ${fmt2(d)}`,color:'var(--muted2)'};
+    return {text:fmt2(d),color:'var(--muted)'};
   }
-
-  function formatDate(d){
-    const [y,m,day] = d.split('-');
-    const months = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
-    return `${parseInt(day)} ${months[parseInt(m)-1]}`;
-  }
-
+  const tc={urgent:'#f87171',soon:'#fbbf24',plan:'#60a5fa'};
+  const tb={urgent:'rgba(248,113,113,.12)',soon:'rgba(251,191,36,.12)',plan:'rgba(96,165,250,.12)'};
+  const tl={urgent:'Срочно',soon:'Скоро',plan:'Планирую'};
   function remHTML(r){
-    return `<div class="rem-item">
-      <div class="chk ${r.done?'chk-done':''}" onclick="toggleRem('${r.id}',${!r.done})">${r.done?'✓':''}</div>
-      <div class="rem-info"><div class="rem-t ${r.done?'done':''}">${r.text}</div><span class="tag tag-${r.tag}">${lbl[r.tag]}</span></div>
-      <button class="rem-del" onclick="delRem('${r.id}')">×</button>
-    </div>`;
-  }
-
-  let html = '';
-  Object.entries(groups).forEach(([date, rems])=>{
-    const {text, cls} = dayLabel(date);
-    const count = rems.filter(r=>!r.done).length;
-    html += `<div class="day-group">
-      <div class="day-label ${cls}">${text}${count>0?` <span class="day-badge ${cls}">${count}</span>`:''}
+    return `<div style="background:var(--bg2);border-radius:12px;padding:13px;border:0.5px solid var(--border);display:flex;align-items:flex-start;gap:10px;margin-bottom:6px;${r.done?'opacity:.5':''}">
+      <div onclick="toggleRem('${r.id}',${!r.done})" style="width:20px;height:20px;border-radius:6px;border:${r.done?'none':'1.5px solid rgba(255,255,255,.2)'};background:${r.done?'#4ade80':'transparent'};display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;margin-top:1px;font-size:11px;color:#000">${r.done?'✓':''}</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:500;color:${r.done?'var(--muted)':'var(--text)'};${r.done?'text-decoration:line-through':''};margin-bottom:5px">${r.text}</div>
+        <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+          ${r.due_date?`<span style="font-size:11px;color:var(--muted)">📅 ${fmt2(r.due_date)}</span>`:'<span style="font-size:11px;color:var(--muted)">∞ Бессрочно</span>'}
+          <span style="font-size:10px;padding:2px 8px;border-radius:20px;background:${tb[r.tag]||'rgba(255,255,255,.07)'};color:${tc[r.tag]||'#888'}">${tl[r.tag]||r.tag}</span>
+        </div>
       </div>
-      <div class="rem-list-card">${rems.map(remHTML).join('')}</div>
-    </div>`;
-  });
-
-  if(noDate.length){
-    html += `<div class="day-group">
-      <div class="day-label">Бессрочные</div>
-      <div class="rem-list-card">${noDate.map(remHTML).join('')}</div>
+      <button onclick="delRem('${r.id}')" style="background:none;border:none;color:var(--muted);font-size:17px;cursor:pointer;padding:0 2px;flex-shrink:0">×</button>
     </div>`;
   }
-
-  el.innerHTML = html;
+  const withDate=rems.filter(r=>r.due_date).sort((a,b)=>a.due_date.localeCompare(b.due_date));
+  const noDate=rems.filter(r=>!r.due_date);
+  const groups={};
+  withDate.forEach(r=>{ if(!groups[r.due_date]) groups[r.due_date]=[]; groups[r.due_date].push(r); });
+  let html='';
+  Object.entries(groups).forEach(([date,items])=>{
+    const {text,color}=dayLabel(date);
+    const pending=items.filter(r=>!r.done).length;
+    html+=`<div style="font-size:10px;font-weight:600;color:${color};letter-spacing:.6px;margin:12px 0 7px 2px;display:flex;align-items:center;gap:8px">${text}${pending>0?`<span style="font-size:9px;padding:2px 6px;border-radius:20px;background:rgba(255,255,255,.07);color:var(--muted)">${pending}</span>`:''}</div>${items.map(remHTML).join('')}`;
+  });
+  if(noDate.length) html+=`<div style="font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.6px;margin:12px 0 7px 2px">БЕССРОЧНО</div>${noDate.map(remHTML).join('')}`;
+  el.innerHTML=html;
 }
 
 function renderCatChart(){
@@ -701,14 +710,65 @@ async function delSav(id){
   allSav=allSav.filter(s=>s.id!==id); renderSavings();
 }
 
+let remFilter = 'all';
+
+function setRemFilter(f){
+  remFilter=f;
+  ['all','urgent','soon','endless'].forEach(x=>{
+    const el=document.getElementById(`rf-${x}`);
+    if(!el) return;
+    if(x===f){ el.style.background='rgba(74,222,128,.1)';el.style.border='1.5px solid #4ade80';el.style.color='#4ade80'; }
+    else { el.style.background='var(--bg2)';el.style.border='0.5px solid var(--border)';el.style.color='var(--muted)'; }
+  });
+  renderReminders();
+}
+
+function renderWeekPlanner(){
+  const today=new Date();
+  const dow=today.getDay();
+  const monday=new Date(today);
+  monday.setDate(today.getDate()-(dow===0?6:dow-1));
+  const days=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+  const months=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+  const endOfWeek=new Date(monday); endOfWeek.setDate(monday.getDate()+6);
+  const rangeEl=document.getElementById('week-range');
+  if(rangeEl) rangeEl.textContent=`${monday.getDate()} — ${endOfWeek.getDate()} ${months[endOfWeek.getMonth()].toUpperCase()}`;
+  const grid=document.getElementById('week-grid');
+  if(!grid) return;
+  let html='';
+  for(let i=0;i<7;i++){
+    const d=new Date(monday); d.setDate(monday.getDate()+i);
+    const ds=d.toISOString().slice(0,10);
+    const todayS=today.toISOString().slice(0,10);
+    const isToday=ds===todayS;
+    const dayTasks=allRem.filter(r=>r.due_date===ds&&!r.done);
+    const dots=dayTasks.slice(0,3).map(r=>{
+      const c=r.tag==='urgent'?'#f87171':r.tag==='soon'?'#fbbf24':'#60a5fa';
+      return `<div style="width:4px;height:4px;border-radius:50%;background:${c}"></div>`;
+    }).join('');
+    const emptyDot=`<div style="width:16px;height:2px;border-radius:1px;background:#2a2a2a;margin-top:1px"></div>`;
+    html+=`<div onclick="setWeekDay('${ds}')" style="background:${isToday?'#0d1f0d':'#181818'};border-radius:10px;padding:8px 4px 7px;text-align:center;border:${isToday?'1.5px solid #4ade80':'0.5px solid rgba(255,255,255,.06)'};cursor:pointer">
+      <div style="font-size:9px;color:${isToday?'#4ade80':'#555'};margin-bottom:3px">${days[i]}</div>
+      <div style="font-size:15px;font-weight:600;color:${isToday?'#4ade80':'#f0f0f0'};margin-bottom:3px">${d.getDate()}</div>
+      <div style="font-size:9px;color:${dayTasks.length?isToday?'#4ade80':'#888':'#333'};margin-bottom:4px">${dayTasks.length||0}</div>
+      <div style="display:flex;justify-content:center;gap:2px;height:5px">${dayTasks.length?dots:emptyDot}</div>
+    </div>`;
+  }
+  grid.innerHTML=html;
+}
+
+function setWeekDay(ds){
+  const el=document.getElementById('rem-date');
+  if(el) el.value=ds;
+}
+
 async function addReminder(endless=false){
-  const isEndless = endless === true || endless === 'true';
   const text=document.getElementById('rem-inp').value.trim();
   const tag=document.getElementById('rem-tag').value;
   const date=document.getElementById('rem-date').value;
   if(!text){toast('Введи текст');return;}
-  if(!isEndless && !date){toast('Выбери дату или нажми "Бессрочно"');return;}
-  const due_date = isEndless ? null : date;
+  if(!endless && !date){toast('Выбери дату или нажми "Бессрочно"');return;}
+  const due_date=endless?null:date;
   const r=await apiFetch('POST',`/api/reminders?profile_id=${currentProfile.id}`,{text,tag,due_date});
   allRem.unshift(r);
   document.getElementById('rem-inp').value='';
@@ -737,6 +797,44 @@ function switchTab(tab){
   }
 }
 
+// --- Push notifications ---
+async function registerPush(){
+  if(!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const existing = await reg.pushManager.getSubscription();
+    if(existing){ await sendSubToServer(existing); return; }
+    const res = await apiFetch('GET', '/api/push/vapid-public');
+    const key = urlBase64ToUint8Array(res.key);
+    const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
+    await sendSubToServer(sub);
+    toast('Уведомления включены!');
+  } catch(e){ console.log('Push error:', e); }
+}
+
+async function sendSubToServer(sub){
+  if(!currentProfile) return;
+  await apiFetch('POST', `/api/push/subscribe?profile_id=${currentProfile.id}`, { subscription: sub.toJSON() });
+}
+
+async function testPush(){
+  await apiFetch('POST', `/api/push/test?profile_id=${currentProfile.id}`);
+  toast('Тестовое уведомление отправлено!');
+}
+
+function urlBase64ToUint8Array(base64String){
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = window.atob(base64);
+  return new Uint8Array([...raw].map(c => c.charCodeAt(0)));
+}
+
+async function requestPushPermission(){
+  const perm = await Notification.requestPermission();
+  if(perm === 'granted'){ await registerPush(); }
+  else { toast('Уведомления отклонены'); }
+}
+
 // --- Init ---
 renderColorRow();
 
@@ -749,7 +847,15 @@ async function init(){
   }
 }
 
-if('serviceWorker' in navigator) navigator.serviceWorker.register('/static/sw.js');
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/static/sw.js').then(reg => {
+    console.log('SW registered');
+  });
+}
+
+document.getElementById('btn-with-date').addEventListener('click', ()=>addReminder(false));
+document.getElementById('btn-endless').addEventListener('click', ()=>addReminder(true));
+
 init();
 setInterval(()=>{ if(currentProfile) loadAll(); }, 30000);
 </script>
