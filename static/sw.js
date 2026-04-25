@@ -1,4 +1,4 @@
-const CACHE = 'finapp-v1';
+const CACHE = 'finapp-v2';
 const ASSETS = ['/', '/static/manifest.json'];
 
 self.addEventListener('install', e => {
@@ -21,11 +21,21 @@ self.addEventListener('fetch', e => {
 });
 
 self.addEventListener('push', e => {
-  const data = e.data ? e.data.json() : { title: 'Напоминание', body: 'Проверь список дел' };
-  e.waitUntil(self.registration.showNotification(data.title, {
-    body: data.body,
-    icon: '/static/icon-192.png',
-    badge: '/static/icon-192.png',
-    vibrate: [200, 100, 200]
-  }));
+  let data = { title: 'Финансы', body: 'Проверь список дел' };
+  try { data = e.data ? e.data.json() : data; } catch(err) {}
+  e.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: '/static/icon-192.png',
+      badge: '/static/icon-192.png',
+      vibrate: [200, 100, 200],
+      tag: 'finapp-reminder',
+      renotify: true
+    })
+  );
+});
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(clients.openWindow('/'));
 });

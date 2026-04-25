@@ -8,6 +8,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Финансы">
 <link rel="manifest" href="/static/manifest.json">
+<link rel="icon" type="image/png" href="/static/icon-32.png">
+<link rel="apple-touch-icon" href="/static/icon-192.png">
 <title>Финансы</title>
 <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -202,7 +204,10 @@ input[type="date"]{color-scheme:dark}
         <span class="pb-name" id="pb-name">Загрузка...</span>
         <span class="pb-arrow">▾</span>
       </div>
-      <button class="sync-btn" id="sync-btn" onclick="loadAll()">↻ Обновить</button>
+      <div style="display:flex;align-items:center;gap:6px">
+        <img src="/static/icon-32.png" style="width:22px;height:22px;border-radius:6px" />
+        <button class="sync-btn" id="sync-btn" onclick="loadAll()">↻ Обновить</button>
+      </div>
     </div>
     <div style="display:flex;gap:6px;margin-bottom:10px">
       <button class="sync-btn" id="notif-btn" onclick="requestPushPermission()" style="flex:1;text-align:center">🔔 Включить уведомления</button>
