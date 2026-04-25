@@ -813,13 +813,21 @@ async function addReminder(endless=false){
   const text=document.getElementById('rem-inp').value.trim();
   const tag=document.getElementById('rem-tag').value;
   const date=document.getElementById('rem-date').value;
+  console.log('CREATE',{endless,date});
   if(!text){toast('Введи текст');return;}
-  if(!endless && !date){toast('Выбери дату');return;}
-  const due_date=endless?null:date;
-  const r=await apiFetch('POST',`/api/reminders?profile_id=${currentProfile.id}`,{text,tag,due_date});
-  allRem.unshift(r);
-  document.getElementById('rem-inp').value='';
-  renderReminders(); toast('Добавлено!');
+  if(!currentProfile){toast('Профиль не выбран');return;}
+  if(!endless&&!date){toast('Выбери дату');return;}
+  const payload={text,tag,...(endless?{}:{due_date:date})};
+  console.log('PAYLOAD',payload);
+  try{
+    const r=await apiFetch('POST',`/api/reminders?profile_id=${currentProfile.id}`,payload);
+    allRem.unshift(r);
+    document.getElementById('rem-inp').value='';
+    renderReminders(); toast('Добавлено!');
+  }catch(e){
+    console.error('addReminder error',e);
+    toast('Ошибка при создании');
+  }
 }
 
 async function toggleRem(id,done){
@@ -898,7 +906,7 @@ if('serviceWorker' in navigator){
 }
 
 document.getElementById('btn-with-date').addEventListener('click', ()=>{ setEndlessMode(false); addReminder(false); });
-document.getElementById('btn-endless').addEventListener('click', ()=>{ addReminder(true); });
+document.getElementById('btn-endless').addEventListener('click', ()=>{ setEndlessMode(true); addReminder(true); });
 document.getElementById('rem-date').addEventListener('change', (e)=>{ selectedDate=e.target.value; renderWeekPlanner(); });
 
 // Swipe navigation
