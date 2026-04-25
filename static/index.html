@@ -300,15 +300,10 @@ input[type="date"]{color-scheme:dark}
       </div>
 
       <div id="week-planner" style="margin-bottom:12px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-          <div style="display:flex;align-items:center;gap:8px">
-            <button id="week-prev" style="background:var(--bg2);border:0.5px solid var(--border);border-radius:6px;color:var(--muted2);font-size:14px;padding:2px 8px;cursor:pointer">‹</button>
-            <div style="font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.8px">ПЛАН НА НЕДЕЛЮ</div>
-            <button id="week-next" style="background:var(--bg2);border:0.5px solid var(--border);border-radius:6px;color:var(--muted2);font-size:14px;padding:2px 8px;cursor:pointer">›</button>
-          </div>
-          <div style="font-size:11px;color:var(--muted)" id="week-range"></div>
+        <div style="text-align:right;margin-bottom:8px">
+          <span style="font-size:11px;color:var(--muted)" id="week-range"></span>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px" id="week-grid"></div>
+        <div id="week-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;touch-action:pan-y"></div>
       </div>
 
       <div style="display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:2px" id="rem-filters">
@@ -819,13 +814,11 @@ async function addReminder(endless=false){
   const tag=document.getElementById('rem-tag').value;
   const date=document.getElementById('rem-date').value;
   if(!text){toast('Введи текст');return;}
-  const useEndless = endless || isEndlessMode;
-  if(!useEndless && !date){toast('Выбери дату или нажми "Бессрочно"');return;}
-  const due_date=useEndless?null:date;
+  if(!endless && !date){toast('Выбери дату');return;}
+  const due_date=endless?null:date;
   const r=await apiFetch('POST',`/api/reminders?profile_id=${currentProfile.id}`,{text,tag,due_date});
   allRem.unshift(r);
   document.getElementById('rem-inp').value='';
-  if(useEndless) setEndlessMode(false);
   renderReminders(); toast('Добавлено!');
 }
 
@@ -905,12 +898,22 @@ if('serviceWorker' in navigator){
 }
 
 document.getElementById('btn-with-date').addEventListener('click', ()=>{ setEndlessMode(false); addReminder(false); });
-document.getElementById('btn-endless').addEventListener('click', ()=>{
-  if(!isEndlessMode){ setEndlessMode(true); } else { addReminder(true); }
-});
-document.getElementById('week-prev').addEventListener('click', ()=>{ weekOffset--; renderWeekPlanner(); });
-document.getElementById('week-next').addEventListener('click', ()=>{ weekOffset++; renderWeekPlanner(); });
+document.getElementById('btn-endless').addEventListener('click', ()=>{ addReminder(true); });
 document.getElementById('rem-date').addEventListener('change', (e)=>{ selectedDate=e.target.value; renderWeekPlanner(); });
+
+// Swipe navigation
+(function(){
+  let tx=0;
+  const grid=document.getElementById('week-grid');
+  grid.addEventListener('touchstart', e=>{ tx=e.changedTouches[0].clientX; }, {passive:true});
+  grid.addEventListener('touchend', e=>{
+    const dx=e.changedTouches[0].clientX - tx;
+    if(Math.abs(dx)<50) return;
+    weekOffset += dx<0 ? 1 : -1;
+    renderWeekPlanner();
+    renderReminders();
+  }, {passive:true});
+})();
 
 init();
 setInterval(()=>{ if(currentProfile) loadAll(); }, 30000);
