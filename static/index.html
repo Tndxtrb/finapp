@@ -548,18 +548,27 @@ function renderReminders(){
     return;
   }
 
-  let rems=allRem.filter(r=>r.due_date===selectedDate);
-  if(remFilter==='urgent') rems=rems.filter(r=>r.tag==='urgent');
-  else if(remFilter==='soon') rems=rems.filter(r=>r.tag==='soon');
+  let dayRems=allRem.filter(r=>r.due_date===selectedDate);
+  const noDateRems=allRem.filter(r=>!r.due_date);
+  if(remFilter==='urgent'){ dayRems=dayRems.filter(r=>r.tag==='urgent'); }
+  else if(remFilter==='soon'){ dayRems=dayRems.filter(r=>r.tag==='soon'); }
 
-  if(!rems.length){
+  const hasDay=dayRems.length>0, hasEndless=noDateRems.length>0;
+  if(!hasDay && !hasEndless){
     const {text,color}=dayLabel(selectedDate);
-    el.innerHTML=`<div style="font-size:10px;font-weight:600;color:${color};letter-spacing:.6px;margin:4px 0 12px 2px">${text}</div><div class="empty">Задач на этот день нет</div>`;
+    el.innerHTML=`<div style="font-size:10px;font-weight:600;color:${color};letter-spacing:.6px;margin:4px 0 12px 2px">${text}</div><div class="empty">Задач нет</div>`;
     return;
   }
-  const {text,color}=dayLabel(selectedDate);
-  const pending=rems.filter(r=>!r.done).length;
-  el.innerHTML=`<div style="font-size:10px;font-weight:600;color:${color};letter-spacing:.6px;margin:4px 0 7px 2px;display:flex;align-items:center;gap:8px">${text}${pending>0?`<span style="font-size:9px;padding:2px 6px;border-radius:20px;background:rgba(255,255,255,.07);color:var(--muted)">${pending}</span>`:''}</div>${rems.map(remHTML).join('')}`;
+  let html='';
+  if(hasDay){
+    const {text,color}=dayLabel(selectedDate);
+    const pending=dayRems.filter(r=>!r.done).length;
+    html+=`<div style="font-size:10px;font-weight:600;color:${color};letter-spacing:.6px;margin:4px 0 7px 2px;display:flex;align-items:center;gap:8px">${text}${pending>0?`<span style="font-size:9px;padding:2px 6px;border-radius:20px;background:rgba(255,255,255,.07);color:var(--muted)">${pending}</span>`:''}</div>${dayRems.map(remHTML).join('')}`;
+  }
+  if(remFilter==='all' && hasEndless){
+    html+=`<div style="font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.6px;margin:12px 0 7px 2px">БЕССРОЧНО</div>${noDateRems.map(remHTML).join('')}`;
+  }
+  el.innerHTML=html||'<div class="empty">Задач нет</div>';
 }
 
 function renderCatChart(){
