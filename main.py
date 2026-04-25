@@ -198,8 +198,7 @@ def list_reminders(profile_id: str = Query(...), db: sqlite3.Connection = Depend
 def add_reminder(r: Reminder, profile_id: str = Query(...), db: sqlite3.Connection = Depends(get_db)):
     uid = str(uuid.uuid4())
     now = datetime.now().isoformat()
-    db.execute("INSERT INTO reminders VALUES (?,?,?,?,?,?,?)",
-               (uid, profile_id, r.text, r.tag, 0, r.due_date, now))
+    db.execute("INSERT INTO reminders (id, profile_id, text, tag, done, due_date, created_at) VALUES (?,?,?,?,?,?,?)",               (uid, profile_id, r.text, r.tag, 0, r.due_date, now))
     db.commit()
     return {"id": uid, "profile_id": profile_id, "text": r.text, "tag": r.tag, "done": False, "due_date": r.due_date, "created_at": now}
 
