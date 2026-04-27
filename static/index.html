@@ -162,25 +162,25 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Onest'
 .empty{text-align:center;padding:28px 16px;color:var(--muted);font-size:13px}
 
 /* PIN screen */
-.pin-screen{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem}
+.pin-screen{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;overflow-y:auto}
 .pin-screen.hidden{display:none}
-.pin-logo{font-size:36px;margin-bottom:1rem}
+.pin-logo{font-size:36px;margin-bottom:1rem;text-align:center}
 .pin-title{font-size:20px;font-weight:600;margin-bottom:6px;text-align:center}
 .pin-sub{font-size:13px;color:var(--muted2);margin-bottom:2rem;text-align:center}
-.pin-dots{display:flex;gap:14px;margin-bottom:2rem}
-.pin-dot{width:16px;height:16px;border-radius:50%;background:var(--bg3);border:1.5px solid var(--border2);transition:all .15s}
+.pin-dots{display:flex;gap:14px;margin-bottom:1.5rem;justify-content:center}
+.pin-dot{width:16px;height:16px;border-radius:50%;background:var(--bg3);border:1.5px solid var(--border2);transition:all .15s;flex-shrink:0}
 .pin-dot.filled{background:var(--text);border-color:var(--text)}
 .pin-dot.error{background:var(--red);border-color:var(--red)}
-.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:260px}
-.pin-btn{padding:18px;border-radius:14px;font-size:22px;font-weight:500;background:var(--bg2);color:var(--text);border:0.5px solid var(--border2);cursor:pointer;text-align:center;transition:background .1s;font-family:inherit}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:280px;margin:0 auto}
+.pin-btn{padding:18px;border-radius:14px;font-size:22px;font-weight:500;background:var(--bg2);color:var(--text);border:0.5px solid var(--border2);cursor:pointer;text-align:center;transition:background .1s;font-family:inherit;user-select:none}
 .pin-btn:active{background:var(--bg3)}
 .pin-btn.del{font-size:18px;color:var(--muted2)}
 .pin-btn.empty{background:transparent;border:none;cursor:default}
-.pin-mode-switch{margin-top:1.5rem;display:flex;gap:12px}
+.pin-mode-switch{margin-top:1.5rem;display:flex;gap:12px;justify-content:center}
 .pin-link{font-size:13px;color:var(--muted2);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
-.pin-register{width:100%;max-width:280px;margin-top:1rem}
-.pin-register input{width:100%;background:var(--bg2);border:0.5px solid var(--border2);border-radius:10px;padding:12px 14px;color:var(--text);font-size:15px;font-family:inherit;outline:none;margin-bottom:10px}
 .pin-error{font-size:12px;color:var(--red);text-align:center;min-height:18px;margin-bottom:8px}
+#pin-login-view{display:flex;flex-direction:column;align-items:center;width:100%;max-width:320px}
+#pin-register-view{display:flex;flex-direction:column;align-items:center;width:100%;max-width:320px}
 
 /* Color swatches for new profile */
 .color-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;justify-content:center}
@@ -196,6 +196,50 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Onest'
 .day-badge.today{background:rgba(96,165,250,.15);color:var(--blue)}
 .day-badge.overdue{background:rgba(248,113,113,.12);color:var(--red)}
 input[type="date"]{color-scheme:dark}
+
+@keyframes pinBtnFall{
+  0%{transform:translateY(0) rotate(0deg);opacity:1}
+  20%{transform:translateY(-8px) rotate(var(--r,2deg));opacity:1}
+  100%{transform:translateY(120vh) rotate(var(--r,15deg));opacity:0}
+}
+@keyframes glitchShake{
+  0%,100%{transform:translateX(0)}
+  10%{transform:translateX(-6px) skewX(-2deg)}
+  20%{transform:translateX(6px) skewX(2deg)}
+  30%{transform:translateX(-4px)}
+  40%{transform:translateX(4px) skewX(-1deg)}
+  50%{transform:translateX(-2px)}
+  60%{transform:translateX(2px)}
+  70%{transform:translateX(-1px)}
+  80%{transform:translateX(1px)}
+}
+@keyframes glitchSlice{
+  0%{clip-path:inset(0 0 100% 0);opacity:1}
+  20%{clip-path:inset(30% 0 40% 0);opacity:1}
+  40%{clip-path:inset(60% 0 10% 0);opacity:1}
+  60%{clip-path:inset(10% 0 60% 0);opacity:0.7}
+  80%{clip-path:inset(80% 0 0 0);opacity:0.4}
+  100%{clip-path:inset(0 0 0 0);opacity:0}
+}
+@keyframes appReveal{
+  0%{opacity:0;transform:scale(1.03)}
+  100%{opacity:1;transform:scale(1)}
+}
+.pin-screen.glitching{animation:glitchShake .4s ease-in-out}
+.pin-screen.glitching .pin-btn:not(.empty){animation:pinBtnFall .6s ease-in forwards}
+.pin-screen.glitching .pin-btn:nth-child(1){--r:-8deg;animation-delay:.05s}
+.pin-screen.glitching .pin-btn:nth-child(2){--r:3deg;animation-delay:.1s}
+.pin-screen.glitching .pin-btn:nth-child(3){--r:-5deg;animation-delay:.02s}
+.pin-screen.glitching .pin-btn:nth-child(4){--r:6deg;animation-delay:.13s}
+.pin-screen.glitching .pin-btn:nth-child(5){--r:-3deg;animation-delay:.07s}
+.pin-screen.glitching .pin-btn:nth-child(6){--r:9deg;animation-delay:.15s}
+.pin-screen.glitching .pin-btn:nth-child(7){--r:-7deg;animation-delay:.04s}
+.pin-screen.glitching .pin-btn:nth-child(8){--r:4deg;animation-delay:.11s}
+.pin-screen.glitching .pin-btn:nth-child(9){--r:-2deg;animation-delay:.08s}
+.pin-screen.glitching .pin-btn:nth-child(11){--r:5deg;animation-delay:.12s}
+.pin-screen.glitching .pin-btn:nth-child(12){--r:-6deg;animation-delay:.06s}
+.pin-screen.dissolving{animation:glitchSlice .35s ease-in forwards}
+#main-app.reveal{animation:appReveal .4s ease-out forwards}
 </style>
 </head>
 <body>
@@ -203,11 +247,9 @@ input[type="date"]{color-scheme:dark}
 <!-- PIN screen -->
 <div id="pin-screen" class="pin-screen">
   <div id="pin-login-view">
-    <div style="text-align:center">
-      <div class="pin-logo">💰</div>
-      <div class="pin-title">Введи PIN</div>
-      <div class="pin-sub">4 цифры от твоего аккаунта</div>
-    </div>
+    <div class="pin-logo">💰</div>
+    <div class="pin-title">Введи PIN</div>
+    <div class="pin-sub">4 цифры от твоего аккаунта</div>
     <div class="pin-dots" id="pin-dots">
       <div class="pin-dot" id="d0"></div>
       <div class="pin-dot" id="d1"></div>
@@ -281,10 +323,8 @@ input[type="date"]{color-scheme:dark}
         <button class="sync-btn" id="sync-btn" onclick="loadAll()">↻ Обновить</button>
       </div>
     </div>
-    <div style="display:flex;gap:6px;margin-bottom:10px">
-      <button class="sync-btn" id="notif-btn" onclick="requestPushPermission()" style="flex:1;text-align:center">🔔 Уведомления</button>
-      <button class="sync-btn" onclick="showChangePinModal()" style="font-size:11px">🔑 PIN</button>
-      <button class="sync-btn" onclick="testPush()" style="font-size:10px">Тест</button>
+    <div style="display:flex;gap:6px;margin-bottom:10px;justify-content:flex-end">
+      <button class="sync-btn" onclick="showChangePinModal()" style="font-size:11px">🔑 Сменить PIN</button>
     </div>
     <div class="bal-label">Баланс</div>
     <div class="bal-amount bal-pos" id="balance-val">0 ₽</div>
@@ -586,10 +626,29 @@ async function doRegister(){
 
 function enterApp(user){
   currentUser = user;
-  document.getElementById('pin-screen').classList.add('hidden');
-  document.getElementById('main-app').style.display='flex';
   updateProfileBadge();
-  loadAll();
+
+  const screen = document.getElementById('pin-screen');
+  const app = document.getElementById('main-app');
+
+  // Phase 1: shake + buttons fall
+  screen.classList.add('glitching');
+
+  setTimeout(()=>{
+    // Phase 2: whole screen dissolves
+    screen.classList.remove('glitching');
+    screen.classList.add('dissolving');
+  }, 450);
+
+  setTimeout(()=>{
+    // Phase 3: app appears
+    screen.classList.add('hidden');
+    screen.classList.remove('dissolving');
+    app.style.display='flex';
+    app.classList.add('reveal');
+    setTimeout(()=>app.classList.remove('reveal'), 400);
+    loadAll();
+  }, 800);
 }
 
 function updateProfileBadge(){
