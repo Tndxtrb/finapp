@@ -161,8 +161,29 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Onest'
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .empty{text-align:center;padding:28px 16px;color:var(--muted);font-size:13px}
 
+/* PIN screen */
+.pin-screen{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem}
+.pin-screen.hidden{display:none}
+.pin-logo{font-size:36px;margin-bottom:1rem}
+.pin-title{font-size:20px;font-weight:600;margin-bottom:6px;text-align:center}
+.pin-sub{font-size:13px;color:var(--muted2);margin-bottom:2rem;text-align:center}
+.pin-dots{display:flex;gap:14px;margin-bottom:2rem}
+.pin-dot{width:16px;height:16px;border-radius:50%;background:var(--bg3);border:1.5px solid var(--border2);transition:all .15s}
+.pin-dot.filled{background:var(--text);border-color:var(--text)}
+.pin-dot.error{background:var(--red);border-color:var(--red)}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:260px}
+.pin-btn{padding:18px;border-radius:14px;font-size:22px;font-weight:500;background:var(--bg2);color:var(--text);border:0.5px solid var(--border2);cursor:pointer;text-align:center;transition:background .1s;font-family:inherit}
+.pin-btn:active{background:var(--bg3)}
+.pin-btn.del{font-size:18px;color:var(--muted2)}
+.pin-btn.empty{background:transparent;border:none;cursor:default}
+.pin-mode-switch{margin-top:1.5rem;display:flex;gap:12px}
+.pin-link{font-size:13px;color:var(--muted2);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.pin-register{width:100%;max-width:280px;margin-top:1rem}
+.pin-register input{width:100%;background:var(--bg2);border:0.5px solid var(--border2);border-radius:10px;padding:12px 14px;color:var(--text);font-size:15px;font-family:inherit;outline:none;margin-bottom:10px}
+.pin-error{font-size:12px;color:var(--red);text-align:center;min-height:18px;margin-bottom:8px}
+
 /* Color swatches for new profile */
-.color-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.color-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;justify-content:center}
 .color-swatch{width:28px;height:28px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:border .15s}
 .color-swatch.selected{border-color:var(--text)}
 
@@ -179,18 +200,69 @@ input[type="date"]{color-scheme:dark}
 </head>
 <body>
 
-<!-- Profile picker -->
-<div id="profile-screen">
-  <div class="ps-logo">💰</div>
-  <div class="ps-title">Выбери профиль</div>
-  <div class="ps-sub">Данные у каждого свои, но можно смотреть общую картину</div>
-  <div class="profiles-list" id="profiles-list"></div>
-  <div class="ps-divider">— или создай новый —</div>
-  <div style="width:100%;max-width:320px;margin-bottom:10px">
-    <div class="color-row" id="color-row"></div>
-    <div class="ps-new">
-      <input id="new-profile-name" placeholder="Имя профиля..." maxlength="20" />
-      <button onclick="createProfile()">Создать</button>
+<!-- PIN screen -->
+<div id="pin-screen" class="pin-screen">
+  <div id="pin-login-view">
+    <div style="text-align:center">
+      <div class="pin-logo">💰</div>
+      <div class="pin-title">Введи PIN</div>
+      <div class="pin-sub">4 цифры от твоего аккаунта</div>
+    </div>
+    <div class="pin-dots" id="pin-dots">
+      <div class="pin-dot" id="d0"></div>
+      <div class="pin-dot" id="d1"></div>
+      <div class="pin-dot" id="d2"></div>
+      <div class="pin-dot" id="d3"></div>
+    </div>
+    <div class="pin-error" id="pin-error"></div>
+    <div class="pin-pad">
+      <div class="pin-btn" onclick="pinPress('1')">1</div>
+      <div class="pin-btn" onclick="pinPress('2')">2</div>
+      <div class="pin-btn" onclick="pinPress('3')">3</div>
+      <div class="pin-btn" onclick="pinPress('4')">4</div>
+      <div class="pin-btn" onclick="pinPress('5')">5</div>
+      <div class="pin-btn" onclick="pinPress('6')">6</div>
+      <div class="pin-btn" onclick="pinPress('7')">7</div>
+      <div class="pin-btn" onclick="pinPress('8')">8</div>
+      <div class="pin-btn" onclick="pinPress('9')">9</div>
+      <div class="pin-btn empty"></div>
+      <div class="pin-btn" onclick="pinPress('0')">0</div>
+      <div class="pin-btn del" onclick="pinDel()">⌫</div>
+    </div>
+    <div class="pin-mode-switch">
+      <span class="pin-link" onclick="showRegister()">Нет аккаунта? Создать</span>
+    </div>
+  </div>
+
+  <div id="pin-register-view" style="display:none;width:100%;max-width:320px;text-align:center">
+    <div class="pin-logo">✨</div>
+    <div class="pin-title" style="margin-bottom:1.5rem">Новый аккаунт</div>
+    <div class="color-row" id="reg-color-row" style="justify-content:center;margin-bottom:16px"></div>
+    <input id="reg-name" placeholder="Твоё имя..." maxlength="20" style="width:100%;background:var(--bg2);border:0.5px solid var(--border2);border-radius:10px;padding:12px 14px;color:var(--text);font-size:15px;font-family:inherit;outline:none;margin-bottom:10px" />
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Придумай PIN (4 цифры)</div>
+    <div class="pin-dots" id="reg-dots" style="justify-content:center">
+      <div class="pin-dot" id="rd0"></div>
+      <div class="pin-dot" id="rd1"></div>
+      <div class="pin-dot" id="rd2"></div>
+      <div class="pin-dot" id="rd3"></div>
+    </div>
+    <div class="pin-error" id="reg-error"></div>
+    <div class="pin-pad" style="margin:0 auto">
+      <div class="pin-btn" onclick="regPress('1')">1</div>
+      <div class="pin-btn" onclick="regPress('2')">2</div>
+      <div class="pin-btn" onclick="regPress('3')">3</div>
+      <div class="pin-btn" onclick="regPress('4')">4</div>
+      <div class="pin-btn" onclick="regPress('5')">5</div>
+      <div class="pin-btn" onclick="regPress('6')">6</div>
+      <div class="pin-btn" onclick="regPress('7')">7</div>
+      <div class="pin-btn" onclick="regPress('8')">8</div>
+      <div class="pin-btn" onclick="regPress('9')">9</div>
+      <div class="pin-btn empty"></div>
+      <div class="pin-btn" onclick="regPress('0')">0</div>
+      <div class="pin-btn del" onclick="regDel()">⌫</div>
+    </div>
+    <div class="pin-mode-switch">
+      <span class="pin-link" onclick="showLogin()">Уже есть аккаунт</span>
     </div>
   </div>
 </div>
@@ -199,7 +271,7 @@ input[type="date"]{color-scheme:dark}
 <div class="app" id="main-app" style="display:none">
   <div class="header">
     <div class="header-top">
-      <div class="profile-badge" onclick="switchProfile()" id="profile-badge">
+      <div class="profile-badge" onclick="showPinScreen()" id="profile-badge">
         <div class="pb-avatar" id="pb-avatar"></div>
         <span class="pb-name" id="pb-name">Загрузка...</span>
         <span class="pb-arrow">▾</span>
@@ -210,7 +282,8 @@ input[type="date"]{color-scheme:dark}
       </div>
     </div>
     <div style="display:flex;gap:6px;margin-bottom:10px">
-      <button class="sync-btn" id="notif-btn" onclick="requestPushPermission()" style="flex:1;text-align:center">🔔 Включить уведомления</button>
+      <button class="sync-btn" id="notif-btn" onclick="requestPushPermission()" style="flex:1;text-align:center">🔔 Уведомления</button>
+      <button class="sync-btn" onclick="showChangePinModal()" style="font-size:11px">🔑 PIN</button>
       <button class="sync-btn" onclick="testPush()" style="font-size:10px">Тест</button>
     </div>
     <div class="bal-label">Баланс</div>
@@ -318,11 +391,26 @@ input[type="date"]{color-scheme:dark}
 
     <!-- JOINT -->
     <div id="sec-joint" class="section">
-      <div class="joint-header" id="joint-header"></div>
+      <div class="card" style="margin-bottom:10px">
+        <div class="card-title">Мой код приглашения</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+          <div id="my-invite-code" style="font-size:24px;font-weight:700;letter-spacing:4px;color:var(--green);flex:1"></div>
+          <button onclick="copyInvite()" style="padding:8px 14px;border-radius:8px;font-size:12px;background:var(--bg3);color:var(--muted2);border:0.5px solid var(--border2);cursor:pointer;font-family:inherit">Копировать</button>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Отправь этот код другу — он введёт его и вы увидите общий бюджет</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:6px">Добавить по коду друга:</div>
+        <div style="display:flex;gap:7px">
+          <input id="invite-input" placeholder="Код (6 символов)..." maxlength="6" style="flex:1;background:var(--bg3);border:0.5px solid var(--border2);border-radius:9px;padding:10px 12px;color:var(--text);font-size:14px;font-family:inherit;outline:none;text-transform:uppercase" />
+          <button onclick="joinGroup()" class="big-btn" style="width:auto;padding:10px 16px">Добавить</button>
+        </div>
+      </div>
+      <div id="joint-header"></div>
       <div id="joint-profiles"></div>
-      <div class="chart-card">
-        <div class="card-title">Расходы вместе</div>
-        <div style="position:relative;height:200px;"><canvas id="jointChart"></canvas></div>
+      <div id="joint-chart-wrap" style="display:none">
+        <div class="chart-card">
+          <div class="card-title">Расходы вместе</div>
+          <div style="position:relative;height:200px;"><canvas id="jointChart"></canvas></div>
+        </div>
       </div>
     </div>
   </div>
@@ -336,6 +424,32 @@ input[type="date"]{color-scheme:dark}
   </nav>
 </div>
 
+<!-- Change PIN modal -->
+<div id="pin-change-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;align-items:center;justify-content:center;padding:1rem">
+  <div style="background:var(--bg2);border-radius:20px;padding:24px;width:100%;max-width:320px;border:0.5px solid var(--border2)">
+    <div style="font-size:16px;font-weight:600;margin-bottom:4px;text-align:center">Сменить PIN</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:20px;text-align:center">Введи текущий и новый PIN</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Текущий PIN:</div>
+    <div style="display:flex;gap:10px;justify-content:center;margin-bottom:16px" id="cp-old-dots">
+      <div class="pin-dot" id="co0"></div><div class="pin-dot" id="co1"></div>
+      <div class="pin-dot" id="co2"></div><div class="pin-dot" id="co3"></div>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Новый PIN:</div>
+    <div style="display:flex;gap:10px;justify-content:center;margin-bottom:16px" id="cp-new-dots">
+      <div class="pin-dot" id="cn0"></div><div class="pin-dot" id="cn1"></div>
+      <div class="pin-dot" id="cn2"></div><div class="pin-dot" id="cn3"></div>
+    </div>
+    <div class="pin-error" id="cp-error" style="margin-bottom:10px"></div>
+    <div class="pin-pad" style="margin:0 auto 16px">
+      <div class="pin-btn" onclick="cpPress('1')">1</div><div class="pin-btn" onclick="cpPress('2')">2</div><div class="pin-btn" onclick="cpPress('3')">3</div>
+      <div class="pin-btn" onclick="cpPress('4')">4</div><div class="pin-btn" onclick="cpPress('5')">5</div><div class="pin-btn" onclick="cpPress('6')">6</div>
+      <div class="pin-btn" onclick="cpPress('7')">7</div><div class="pin-btn" onclick="cpPress('8')">8</div><div class="pin-btn" onclick="cpPress('9')">9</div>
+      <div class="pin-btn empty"></div><div class="pin-btn" onclick="cpPress('0')">0</div><div class="pin-btn del" onclick="cpDel()">⌫</div>
+    </div>
+    <button onclick="hideChangePinModal()" style="width:100%;padding:12px;border-radius:10px;background:var(--bg3);color:var(--muted2);border:0.5px solid var(--border2);font-size:14px;cursor:pointer;font-family:inherit">Отмена</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -344,9 +458,9 @@ const API = '';
 const COLORS = ['#60a5fa','#4ade80','#fbbf24','#f87171','#a78bfa','#2dd4bf','#fb923c','#e879f9'];
 const PROFILE_COLORS = ['#60a5fa','#f87171','#4ade80','#fbbf24','#a78bfa','#2dd4bf','#fb923c'];
 let selColor = PROFILE_COLORS[0];
+let regColor = PROFILE_COLORS[0];
 
-let currentProfile = null;
-let allProfiles = [];
+let currentUser = null;
 let allTx = [], allSav = [], allRem = [];
 let txType = 'expense';
 let catChartInst = null, jointChartInst = null;
@@ -368,86 +482,138 @@ async function apiFetch(method, path, body){
   return r.json();
 }
 
-// --- Profile screen ---
-function renderColorRow(){
-  const el = document.getElementById('color-row');
+// --- PIN screen ---
+let pinVal = '';
+let regVal = '';
+
+function renderRegColorRow(){
+  const el = document.getElementById('reg-color-row');
+  if(!el) return;
   el.innerHTML = PROFILE_COLORS.map(c=>`
-    <div class="color-swatch ${c===selColor?'selected':''}" style="background:${c}" onclick="selectColor('${c}')"></div>
+    <div class="color-swatch ${c===regColor?'selected':''}" style="background:${c}" onclick="selectRegColor('${c}')"></div>
   `).join('');
 }
+function selectRegColor(c){ regColor=c; renderRegColorRow(); }
 
-function selectColor(c){ selColor=c; renderColorRow(); }
-
-async function loadProfiles(){
-  allProfiles = await apiFetch('GET','/api/profiles');
-  renderProfileScreen();
+function showLogin(){
+  document.getElementById('pin-login-view').style.display='';
+  document.getElementById('pin-register-view').style.display='none';
+  pinVal=''; updatePinDots();
+  document.getElementById('pin-error').textContent='';
 }
 
-function renderProfileScreen(){
-  const el = document.getElementById('profiles-list');
-  if(!allProfiles.length){
-    el.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center">Нет профилей — создай первый</div>';
-    return;
+function showRegister(){
+  document.getElementById('pin-login-view').style.display='none';
+  document.getElementById('pin-register-view').style.display='';
+  regVal=''; updateRegDots();
+  document.getElementById('reg-error').textContent='';
+  renderRegColorRow();
+}
+
+function showPinScreen(){
+  document.getElementById('pin-screen').classList.remove('hidden');
+  document.getElementById('main-app').style.display='none';
+  showLogin();
+}
+
+function updatePinDots(){
+  for(let i=0;i<4;i++){
+    const d=document.getElementById(`d${i}`);
+    d.classList.toggle('filled', i<pinVal.length);
+    d.classList.remove('error');
   }
-  el.innerHTML = allProfiles.map(p=>`
-    <button class="profile-btn" onclick="selectProfile('${p.id}')">
-      <div class="profile-avatar" style="background:${p.color}20;color:${p.color}">${initials(p.name)}</div>
-      <span style="flex:1">${p.name}</span>
-      <span style="font-size:12px;color:var(--muted)">→</span>
-    </button>
-  `).join('');
 }
 
-function selectProfile(id){
-  currentProfile = allProfiles.find(p=>p.id===id);
-  localStorage.setItem('profile_id', id);
-  document.getElementById('profile-screen').classList.add('hidden');
-  document.getElementById('main-app').style.display = 'flex';
-  updateProfileBadge();
-  loadAll();
+function updateRegDots(){
+  for(let i=0;i<4;i++){
+    const d=document.getElementById(`rd${i}`);
+    d.classList.toggle('filled', i<regVal.length);
+    d.classList.remove('error');
+  }
 }
 
-function switchProfile(){
-  document.getElementById('profile-screen').classList.remove('hidden');
-  document.getElementById('main-app').style.display = 'none';
-  loadProfiles();
+function pinError(){
+  for(let i=0;i<4;i++) document.getElementById(`d${i}`).classList.add('error');
+  setTimeout(()=>{ pinVal=''; updatePinDots(); }, 600);
 }
 
-async function createProfile(){
-  const name = document.getElementById('new-profile-name').value.trim();
-  if(!name){ toast('Введи имя'); return; }
-  const p = await apiFetch('POST','/api/profiles',{name, color: selColor});
-  allProfiles = allProfiles.filter(x=>x.id!==p.id);
-  allProfiles.push(p);
-  document.getElementById('new-profile-name').value='';
-  currentProfile = p;
-  localStorage.setItem('profile_id', p.id);
-  document.getElementById('profile-screen').classList.add('hidden');
-  document.getElementById('main-app').style.display = 'flex';
+function pinPress(d){
+  if(pinVal.length>=4) return;
+  pinVal+=d; updatePinDots();
+  if(pinVal.length===4) setTimeout(doLogin, 100);
+}
+
+function pinDel(){
+  pinVal=pinVal.slice(0,-1); updatePinDots();
+  document.getElementById('pin-error').textContent='';
+}
+
+function regPress(d){
+  if(regVal.length>=4) return;
+  regVal+=d; updateRegDots();
+  if(regVal.length===4) setTimeout(doRegister, 100);
+}
+
+function regDel(){
+  regVal=regVal.slice(0,-1); updateRegDots();
+  document.getElementById('reg-error').textContent='';
+}
+
+async function doLogin(){
+  try{
+    const user = await apiFetch('POST','/api/auth/login',{pin:pinVal});
+    localStorage.setItem('user_id', user.id);
+    enterApp(user);
+  }catch(e){
+    document.getElementById('pin-error').textContent='Неверный PIN';
+    pinError();
+  }
+}
+
+async function doRegister(){
+  const name = document.getElementById('reg-name').value.trim();
+  if(!name){ document.getElementById('reg-error').textContent='Введи имя'; regVal=''; updateRegDots(); return; }
+  try{
+    const user = await apiFetch('POST','/api/auth/register',{name, pin:regVal, color:regColor});
+    localStorage.setItem('user_id', user.id);
+    enterApp(user);
+  }catch(e){
+    const msg = e.message.includes('409') ? 'Этот PIN занят, попробуй другой' : 'Ошибка регистрации';
+    document.getElementById('reg-error').textContent=msg;
+    regVal=''; updateRegDots();
+  }
+}
+
+function enterApp(user){
+  currentUser = user;
+  document.getElementById('pin-screen').classList.add('hidden');
+  document.getElementById('main-app').style.display='flex';
   updateProfileBadge();
   loadAll();
 }
 
 function updateProfileBadge(){
-  if(!currentProfile) return;
+  if(!currentUser) return;
   const av = document.getElementById('pb-avatar');
-  av.textContent = initials(currentProfile.name);
-  av.style.background = currentProfile.color + '25';
-  av.style.color = currentProfile.color;
-  document.getElementById('pb-name').textContent = currentProfile.name;
+  av.textContent = initials(currentUser.name);
+  av.style.background = currentUser.color + '25';
+  av.style.color = currentUser.color;
+  document.getElementById('pb-name').textContent = currentUser.name;
+  const ic = document.getElementById('my-invite-code');
+  if(ic) ic.textContent = currentUser.invite_code;
 }
 
 // --- Data loading ---
 async function loadAll(){
-  if(!currentProfile) return;
+  if(!currentUser) return;
   const btn = document.getElementById('sync-btn');
   btn.textContent = '↻ ...'; btn.classList.add('spin');
-  const pid = currentProfile.id;
+  const uid = currentUser.id;
   try {
     [allTx, allSav, allRem] = await Promise.all([
-      apiFetch('GET', `/api/transactions?profile_id=${pid}`),
-      apiFetch('GET', `/api/savings?profile_id=${pid}`),
-      apiFetch('GET', `/api/reminders?profile_id=${pid}`)
+      apiFetch('GET', `/api/transactions?user_id=${uid}`),
+      apiFetch('GET', `/api/savings?user_id=${uid}`),
+      apiFetch('GET', `/api/reminders?user_id=${uid}`)
     ]);
     renderAll();
   } catch(e){ toast('Ошибка загрузки'); }
@@ -607,33 +773,70 @@ function renderInsights(){
 
 // --- Joint tab ---
 async function loadJoint(){
+  if(!currentUser) return;
+  const invEl = document.getElementById('my-invite-code');
+  if(invEl) invEl.textContent = currentUser.invite_code;
   try {
-    const data = await apiFetch('GET','/api/joint');
+    const data = await apiFetch('GET',`/api/joint?user_id=${currentUser.id}`);
     renderJoint(data);
   } catch(e){ toast('Ошибка загрузки'); }
 }
 
+async function joinGroup(){
+  const code = document.getElementById('invite-input').value.trim().toUpperCase();
+  if(code.length !== 6){ toast('Введи 6-значный код'); return; }
+  try{
+    const res = await apiFetch('POST',`/api/groups/join?user_id=${currentUser.id}`,{invite_code: code});
+    document.getElementById('invite-input').value='';
+    toast(`Добавлен: ${res.partner.name}!`);
+    loadJoint();
+  }catch(e){
+    const msg = e.message.includes('404') ? 'Код не найден' : e.message.includes('409') ? 'Уже в группе' : 'Ошибка';
+    toast(msg);
+  }
+}
+
+function copyInvite(){
+  navigator.clipboard.writeText(currentUser.invite_code).then(()=>toast('Код скопирован!'));
+}
+
 function renderJoint(data){
+  const headerEl = document.getElementById('joint-header');
+  const profilesEl = document.getElementById('joint-profiles');
+  const chartWrap = document.getElementById('joint-chart-wrap');
+
+  if(!data.length){
+    headerEl.innerHTML='';
+    profilesEl.innerHTML='<div class="empty">Добавь друга по коду приглашения выше</div>';
+    if(chartWrap) chartWrap.style.display='none';
+    return;
+  }
+
   const totalInc = data.reduce((a,d)=>a+d.income,0);
   const totalExp = data.reduce((a,d)=>a+d.expense,0);
   const totalBal = totalInc - totalExp;
   const totalSaved = data.reduce((a,d)=>a+d.saved,0);
 
-  document.getElementById('joint-header').innerHTML = `
-    <div class="joint-total-label">Общий баланс</div>
-    <div class="joint-total" style="color:${totalBal>=0?'var(--green)':'var(--red)'}">${fmt(Math.abs(totalBal))}</div>
-    <div class="joint-row">
-      <div class="joint-stat"><div class="joint-stat-l">Доходы</div><div class="joint-stat-v" style="color:var(--green)">${fmt(totalInc)}</div></div>
-      <div class="joint-stat"><div class="joint-stat-l">Расходы</div><div class="joint-stat-v" style="color:var(--red)">${fmt(totalExp)}</div></div>
-      <div class="joint-stat"><div class="joint-stat-l">Накоплено</div><div class="joint-stat-v" style="color:var(--amber)">${fmt(totalSaved)}</div></div>
+  headerEl.innerHTML = `
+    <div class="joint-header">
+      <div class="joint-total-label">Общий баланс</div>
+      <div class="joint-total" style="color:${totalBal>=0?'var(--green)':'var(--red)'}">${fmt(Math.abs(totalBal))}</div>
+      <div class="joint-row">
+        <div class="joint-stat"><div class="joint-stat-l">Доходы</div><div class="joint-stat-v" style="color:var(--green)">${fmt(totalInc)}</div></div>
+        <div class="joint-stat"><div class="joint-stat-l">Расходы</div><div class="joint-stat-v" style="color:var(--red)">${fmt(totalExp)}</div></div>
+        <div class="joint-stat"><div class="joint-stat-l">Накоплено</div><div class="joint-stat-v" style="color:var(--amber)">${fmt(totalSaved)}</div></div>
+      </div>
     </div>`;
 
-  document.getElementById('joint-profiles').innerHTML = data.map(d=>{
+  profilesEl.innerHTML = data.map(d=>{
     const c = d.profile.color;
+    const isMe = d.profile.id === currentUser.id;
     return `<div class="profile-section">
-      <div class="profile-section-header">
-        <div class="ps-dot" style="background:${c}"></div>
-        <div class="ps-name">${d.profile.name}</div>
+      <div class="profile-section-header" style="justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="ps-dot" style="background:${c}"></div>
+          <div class="ps-name">${d.profile.name}${isMe?' (я)':''}</div>
+        </div>
       </div>
       <div class="ps-stats">
         <div class="ps-stat"><div class="ps-stat-l">Доходы</div><div class="ps-stat-v" style="color:var(--green)">${fmt(d.income)}</div></div>
@@ -651,7 +854,7 @@ function renderJoint(data){
     </div>`;
   }).join('');
 
-  // Joint chart - grouped bar per profile
+  if(chartWrap) chartWrap.style.display='block';
   const allCats = [...new Set(data.flatMap(d=>Object.keys(d.by_category)))];
   const ctx = document.getElementById('jointChart');
   if(jointChartInst) jointChartInst.destroy();
@@ -660,7 +863,7 @@ function renderJoint(data){
       type:'bar',
       data:{
         labels: allCats,
-        datasets: data.map((d,i)=>({
+        datasets: data.map(d=>({
           label: d.profile.name,
           data: allCats.map(c=>Math.round(d.by_category[c]||0)),
           backgroundColor: d.profile.color + 'bb',
@@ -688,7 +891,7 @@ async function addTransaction(){
   const amt=parseFloat(document.getElementById('qa-amt').value);
   const cat=document.getElementById('qa-cat').value;
   if(!name||!amt||amt<=0){toast('Заполни название и сумму');return;}
-  const tx = await apiFetch('POST',`/api/transactions?profile_id=${currentProfile.id}`,{name,amount:amt,category:cat,type:txType});
+  const tx = await apiFetch('POST',`/api/transactions?user_id=${currentUser.id}`,{name,amount:amt,category:cat,type:txType});
   allTx.unshift(tx);
   document.getElementById('qa-name').value='';
   document.getElementById('qa-amt').value='';
@@ -705,7 +908,7 @@ async function addSaving(){
   const target=parseFloat(document.getElementById('ns-target').value);
   const current=parseFloat(document.getElementById('ns-current').value)||0;
   if(!name||!target){toast('Заполни название и сумму');return;}
-  const s=await apiFetch('POST',`/api/savings?profile_id=${currentProfile.id}`,{name,target,current});
+  const s=await apiFetch('POST',`/api/savings?user_id=${currentUser.id}`,{name,target,current});
   allSav.push(s);
   document.getElementById('ns-name').value='';
   document.getElementById('ns-target').value='';
@@ -824,12 +1027,12 @@ async function addReminder(endless=false){
   const date=document.getElementById('rem-date').value;
   console.log('CREATE',{endless,date});
   if(!text){toast('Введи текст');return;}
-  if(!currentProfile){toast('Профиль не выбран');return;}
+  if(!currentUser){toast('Профиль не выбран');return;}
   if(!endless&&!date){toast('Выбери дату');return;}
   const payload={text,tag,...(endless?{}:{due_date:date})};
   console.log('PAYLOAD',payload);
   try{
-    const r=await apiFetch('POST',`/api/reminders?profile_id=${currentProfile.id}`,payload);
+    const r=await apiFetch('POST',`/api/reminders?user_id=${currentUser.id}`,payload);
     allRem.unshift(r);
     document.getElementById('rem-inp').value='';
     renderReminders(); toast('Добавлено!');
@@ -874,12 +1077,12 @@ async function registerPush(){
 }
 
 async function sendSubToServer(sub){
-  if(!currentProfile) return;
-  await apiFetch('POST', `/api/push/subscribe?profile_id=${currentProfile.id}`, { subscription: sub.toJSON() });
+  if(!currentUser) return;
+  await apiFetch('POST', `/api/push/subscribe?user_id=${currentUser.id}`, { subscription: sub.toJSON() });
 }
 
 async function testPush(){
-  await apiFetch('POST', `/api/push/test?profile_id=${currentProfile.id}`);
+  await apiFetch('POST', `/api/push/test?user_id=${currentUser.id}`);
   toast('Тестовое уведомление отправлено!');
 }
 
@@ -896,16 +1099,75 @@ async function requestPushPermission(){
   else { toast('Уведомления отклонены'); }
 }
 
+// --- Change PIN ---
+let cpOld = '', cpNew = '', cpStep = 'old';
+
+function showChangePinModal(){
+  cpOld=''; cpNew=''; cpStep='old';
+  updateCpDots();
+  document.getElementById('cp-error').textContent='';
+  const m = document.getElementById('pin-change-modal');
+  m.style.display='flex';
+}
+
+function hideChangePinModal(){
+  document.getElementById('pin-change-modal').style.display='none';
+}
+
+function updateCpDots(){
+  for(let i=0;i<4;i++){
+    document.getElementById(`co${i}`).className='pin-dot'+(i<cpOld.length?' filled':'');
+    document.getElementById(`cn${i}`).className='pin-dot'+(i<cpNew.length?' filled':'');
+  }
+}
+
+function cpPress(d){
+  if(cpStep==='old'){
+    if(cpOld.length>=4) return;
+    cpOld+=d; updateCpDots();
+    if(cpOld.length===4){ cpStep='new'; document.getElementById('cp-error').textContent='Теперь введи новый PIN'; }
+  } else {
+    if(cpNew.length>=4) return;
+    cpNew+=d; updateCpDots();
+    if(cpNew.length===4) setTimeout(doChangePin, 100);
+  }
+}
+
+function cpDel(){
+  if(cpStep==='new' && cpNew.length===0){ cpStep='old'; document.getElementById('cp-error').textContent=''; return; }
+  if(cpStep==='new'){ cpNew=cpNew.slice(0,-1); }
+  else { cpOld=cpOld.slice(0,-1); }
+  updateCpDots();
+}
+
+async function doChangePin(){
+  try{
+    await apiFetch('PATCH',`/api/auth/pin?user_id=${currentUser.id}`,{old_pin:cpOld, new_pin:cpNew});
+    hideChangePinModal();
+    toast('PIN изменён!');
+  }catch(e){
+    const msg = e.message.includes('403')?'Неверный текущий PIN':e.message.includes('409')?'Этот PIN уже занят':'Ошибка';
+    document.getElementById('cp-error').textContent=msg;
+    cpOld=''; cpNew=''; cpStep='old'; updateCpDots();
+  }
+}
+
 // --- Init ---
-renderColorRow();
+renderRegColorRow();
 
 async function init(){
-  await loadProfiles();
-  const savedId = localStorage.getItem('profile_id');
+  const savedId = localStorage.getItem('user_id');
   if(savedId){
-    const p = allProfiles.find(x=>x.id===savedId);
-    if(p){ selectProfile(p.id); return; }
+    try{
+      const user = await apiFetch('GET', `/api/auth/me?user_id=${savedId}`);
+      enterApp(user);
+      return;
+    }catch(e){
+      localStorage.removeItem('user_id');
+    }
   }
+  // Show PIN screen
+  document.getElementById('pin-screen').classList.remove('hidden');
 }
 
 if('serviceWorker' in navigator){
@@ -933,7 +1195,7 @@ document.getElementById('rem-date').addEventListener('change', (e)=>{ selectedDa
 })();
 
 init();
-setInterval(()=>{ if(currentProfile) loadAll(); }, 30000);
+setInterval(()=>{ if(currentUser) loadAll(); }, 30000);
 </script>
 </body>
 </html>
