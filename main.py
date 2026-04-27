@@ -317,7 +317,7 @@ def add_transaction(tx: Transaction, user_id: str = Query(...), db: sqlite3.Conn
     uid = str(uuid.uuid4())
     now = datetime.now().isoformat()
     date_str = datetime.now().strftime("%d.%m")
-    db.execute("INSERT INTO transactions VALUES (?,?,?,?,?,?,?,?)",
+    db.execute("INSERT INTO transactions (id, user_id, name, amount, category, type, date, created_at) VALUES (?,?,?,?,?,?,?,?)",
                (uid, user_id, tx.name, tx.amount, tx.category, tx.type, date_str, now))
     db.commit()
     return {"id": uid, "user_id": user_id, "name": tx.name, "amount": tx.amount,
@@ -339,7 +339,7 @@ def list_savings(user_id: str = Query(...), db: sqlite3.Connection = Depends(get
 def add_saving(s: Saving, user_id: str = Query(...), db: sqlite3.Connection = Depends(get_db)):
     uid = str(uuid.uuid4())
     now = datetime.now().isoformat()
-    db.execute("INSERT INTO savings VALUES (?,?,?,?,?,?,?)",
+    db.execute("INSERT INTO savings (id, user_id, name, target, current, color, created_at) VALUES (?,?,?,?,?,?,?)",
                (uid, user_id, s.name, s.target, s.current, s.color, now))
     db.commit()
     return {"id": uid, "user_id": user_id, **s.dict(), "created_at": now}
