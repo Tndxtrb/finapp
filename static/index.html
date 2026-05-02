@@ -232,49 +232,37 @@ input[type="date"]{color-scheme:dark}
 .danger-btn:active{opacity:.7}
 
 /* PIN screen animations */
-@keyframes pinBtnFall{
-  0%{transform:translateY(0) rotate(0deg);opacity:1}
-  20%{transform:translateY(-8px) rotate(var(--r,2deg));opacity:1}
-  100%{transform:translateY(120vh) rotate(var(--r,15deg));opacity:0}
-}
-@keyframes glitchShake{
+@keyframes pinWrongShake{
   0%,100%{transform:translateX(0)}
-  10%{transform:translateX(-6px) skewX(-2deg)}
-  20%{transform:translateX(6px) skewX(2deg)}
-  30%{transform:translateX(-4px)}
-  40%{transform:translateX(4px) skewX(-1deg)}
-  50%{transform:translateX(-2px)}
-  60%{transform:translateX(2px)}
-  70%{transform:translateX(-1px)}
-  80%{transform:translateX(1px)}
+  15%{transform:translateX(-8px)}
+  35%{transform:translateX(8px)}
+  55%{transform:translateX(-5px)}
+  75%{transform:translateX(5px)}
+  90%{transform:translateX(-2px)}
 }
-@keyframes glitchSlice{
-  0%{clip-path:inset(0 0 100% 0);opacity:1}
-  20%{clip-path:inset(30% 0 40% 0);opacity:1}
-  40%{clip-path:inset(60% 0 10% 0);opacity:1}
-  60%{clip-path:inset(10% 0 60% 0);opacity:0.7}
-  80%{clip-path:inset(80% 0 0 0);opacity:0.4}
-  100%{clip-path:inset(0 0 0 0);opacity:0}
+@keyframes pinDotPop{
+  0%{transform:scale(1)}
+  40%{transform:scale(1.35)}
+  100%{transform:scale(1)}
 }
-@keyframes appReveal{
-  0%{opacity:0;transform:scale(1.03)}
-  100%{opacity:1;transform:scale(1)}
+@keyframes pinScreenExit{
+  0%{opacity:1;transform:scale(1) translateY(0);filter:blur(0px)}
+  100%{opacity:0;transform:scale(1.04) translateY(-12px);filter:blur(6px)}
 }
-.pin-screen.glitching{animation:glitchShake .4s ease-in-out}
-.pin-screen.glitching .pin-btn:not(.empty){animation:pinBtnFall .6s ease-in forwards}
-.pin-screen.glitching .pin-btn:nth-child(1){--r:-8deg;animation-delay:.05s}
-.pin-screen.glitching .pin-btn:nth-child(2){--r:3deg;animation-delay:.1s}
-.pin-screen.glitching .pin-btn:nth-child(3){--r:-5deg;animation-delay:.02s}
-.pin-screen.glitching .pin-btn:nth-child(4){--r:6deg;animation-delay:.13s}
-.pin-screen.glitching .pin-btn:nth-child(5){--r:-3deg;animation-delay:.07s}
-.pin-screen.glitching .pin-btn:nth-child(6){--r:9deg;animation-delay:.15s}
-.pin-screen.glitching .pin-btn:nth-child(7){--r:-7deg;animation-delay:.04s}
-.pin-screen.glitching .pin-btn:nth-child(8){--r:4deg;animation-delay:.11s}
-.pin-screen.glitching .pin-btn:nth-child(9){--r:-2deg;animation-delay:.08s}
-.pin-screen.glitching .pin-btn:nth-child(11){--r:5deg;animation-delay:.12s}
-.pin-screen.glitching .pin-btn:nth-child(12){--r:-6deg;animation-delay:.06s}
-.pin-screen.dissolving{animation:glitchSlice .35s ease-in forwards}
-#main-app.reveal{animation:appReveal .4s ease-out forwards}
+@keyframes appEnter{
+  0%{opacity:0;transform:scale(0.97) translateY(10px)}
+  60%{opacity:1}
+  100%{opacity:1;transform:scale(1) translateY(0)}
+}
+.pin-screen.wrong{animation:pinWrongShake .35s ease-in-out}
+.pin-screen.exiting{animation:pinScreenExit .4s cubic-bezier(.4,0,.2,1) forwards}
+#main-app.entering{animation:appEnter .45s cubic-bezier(.25,.46,.45,.94) forwards}
+
+/* Tab animations */
+@keyframes tabSlideLeft{from{opacity:0;transform:translateX(22px)}to{opacity:1;transform:translateX(0)}}
+@keyframes tabSlideRight{from{opacity:0;transform:translateX(-22px)}to{opacity:1;transform:translateX(0)}}
+.section.slide-left{animation:tabSlideLeft .22s cubic-bezier(.25,.46,.45,.94)}
+.section.slide-right{animation:tabSlideRight .22s cubic-bezier(.25,.46,.45,.94)}
 </style>
 </head>
 <body>
@@ -335,7 +323,6 @@ input[type="date"]{color-scheme:dark}
       </div>
       <div class="header-actions">
         <div class="icon-btn" onclick="openSettingsModal()" title="Настройки">⚙️</div>
-        <img src="/static/icon-32.png" style="width:22px;height:22px;border-radius:6px" />
         <button class="sync-btn" id="sync-btn" onclick="loadAll()">↻</button>
       </div>
     </div>
@@ -724,6 +711,9 @@ function updateRegDots(){
 }
 function pinError(){
   for(let i=0;i<4;i++) document.getElementById(`d${i}`).classList.add('error');
+  const view = document.getElementById('pin-login-view');
+  view.classList.add('wrong');
+  setTimeout(()=>view.classList.remove('wrong'), 350);
   setTimeout(()=>{ pinVal=''; updatePinDots(); }, 600);
 }
 function pinPress(d){ if(pinVal.length>=4) return; pinVal+=d; updatePinDots(); if(pinVal.length===4) setTimeout(doLogin,100); }
@@ -759,14 +749,15 @@ function enterApp(user){
   updateProfileBadge();
   const screen = document.getElementById('pin-screen');
   const app = document.getElementById('main-app');
-  screen.classList.add('glitching');
-  setTimeout(()=>{ screen.classList.remove('glitching'); screen.classList.add('dissolving'); }, 450);
+  screen.classList.add('exiting');
   setTimeout(()=>{
-    screen.classList.add('hidden'); screen.classList.remove('dissolving');
-    app.style.display='flex'; app.classList.add('reveal');
-    setTimeout(()=>app.classList.remove('reveal'), 400);
+    screen.classList.add('hidden');
+    screen.classList.remove('exiting');
+    app.style.display='flex';
+    app.classList.add('entering');
+    setTimeout(()=>app.classList.remove('entering'), 450);
     loadAll();
-  }, 800);
+  }, 380);
 }
 function updateProfileBadge(){
   if(!currentUser) return;
@@ -1447,11 +1438,27 @@ async function doChangePin(){
 
 // --- Tab switching ---
 const TABS=['home','history','savings','reminders','joint'];
+let currentTabIdx = 0;
 function switchTab(tab){
+  const newIdx = TABS.indexOf(tab);
+  const dir = newIdx > currentTabIdx ? 'slide-left' : 'slide-right';
   TABS.forEach(t=>{
-    document.getElementById(`sec-${t}`).classList.toggle('active',t===tab);
-    document.getElementById(`nav-${t}`).classList.toggle('active',t===tab);
+    const sec = document.getElementById(`sec-${t}`);
+    const nav = document.getElementById(`nav-${t}`);
+    if(t===tab){
+      sec.classList.add('active');
+      if(newIdx !== currentTabIdx){
+        sec.classList.remove('slide-left','slide-right');
+        void sec.offsetWidth;
+        sec.classList.add(dir);
+        setTimeout(()=>sec.classList.remove('slide-left','slide-right'), 220);
+      }
+    } else {
+      sec.classList.remove('active');
+    }
+    nav.classList.toggle('active', t===tab);
   });
+  currentTabIdx = newIdx;
   if(tab==='joint') loadJoint();
   if(tab==='reminders') renderReminders();
   if(tab==='history'){ renderMonthFilter(); renderAllTx(); }
