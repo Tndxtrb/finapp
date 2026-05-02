@@ -44,26 +44,30 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Onest'
 
 /* Header */
 .header{padding:14px 16px 10px;padding-top:calc(14px + env(safe-area-inset-top));background:var(--bg);border-bottom:0.5px solid var(--border);flex-shrink:0}
-.header-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.header-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 .profile-badge{display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--bg2);border:0.5px solid var(--border2);border-radius:20px;padding:6px 12px 6px 6px}
 .pb-avatar{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600}
 .pb-name{font-size:13px;font-weight:500}
 .pb-arrow{font-size:10px;color:var(--muted)}
+.header-actions{display:flex;align-items:center;gap:6px}
 .sync-btn{font-size:11px;color:var(--muted2);background:var(--bg2);border:0.5px solid var(--border);border-radius:20px;padding:5px 12px;cursor:pointer;font-family:inherit}
 .sync-btn.spin{color:var(--blue)}
+.icon-btn{width:32px;height:32px;border-radius:50%;background:var(--bg2);border:0.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;flex-shrink:0}
 
 .bal-label{font-size:11px;color:var(--muted);text-align:center;margin-bottom:3px}
-.bal-amount{font-size:32px;font-weight:700;text-align:center;letter-spacing:-1px}
+.bal-amount{font-size:32px;font-weight:700;text-align:center;letter-spacing:-1px;transition:color .3s}
 .bal-pos{color:var(--green)} .bal-neg{color:var(--red)}
-.mini-row{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}
-.mini-c{background:var(--bg2);border-radius:9px;padding:8px 10px}
-.mini-l{font-size:10px;color:var(--muted);margin-bottom:3px}
-.mini-v{font-size:13px;font-weight:600}
+@keyframes balPulse{0%{transform:scale(0.96);opacity:.6}100%{transform:scale(1);opacity:1}}
+.bal-amount.pulse{animation:balPulse .28s ease-out}
+.mini-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:10px}
+.mini-c{background:var(--bg2);border-radius:9px;padding:7px 10px}
+.mini-l{font-size:10px;color:var(--muted);margin-bottom:2px}
+.mini-v{font-size:12px;font-weight:600}
 
 /* Content */
 .content{flex:1;overflow-y:auto;padding:14px;padding-bottom:85px}
 
-/* Bottom nav - 5 tabs */
+/* Bottom nav */
 .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--bg);border-top:0.5px solid var(--border);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:100}
 .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:9px 0 7px;cursor:pointer;gap:3px}
 .nav-icon{font-size:18px;line-height:1}
@@ -72,7 +76,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Onest'
 
 /* Sections */
 .section{display:none}
-.section.active{display:block}
+@keyframes tabEnter{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.section.active{display:block;animation:tabEnter .2s ease-out}
 
 /* Cards & forms */
 .card{background:var(--bg2);border-radius:var(--r);padding:14px;margin-bottom:10px;border:0.5px solid var(--border)}
@@ -105,6 +110,16 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Onest'
 .tx-del:active{color:var(--red)}
 .sect-lbl{font-size:11px;color:var(--muted);font-weight:500;margin-bottom:8px;margin-top:2px}
 
+/* Month filter */
+.month-filter{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;margin-bottom:10px;scrollbar-width:none}
+.month-filter::-webkit-scrollbar{display:none}
+.month-pill{padding:5px 12px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap;cursor:pointer;background:var(--bg2);border:0.5px solid var(--border);color:var(--muted);font-family:inherit}
+.month-pill.active{background:rgba(96,165,250,.12);border-color:var(--blue);color:var(--blue)}
+.hist-summary{display:flex;gap:6px;margin-bottom:10px}
+.hist-stat{flex:1;background:var(--bg2);border-radius:9px;padding:8px 10px;border:0.5px solid var(--border);text-align:center}
+.hist-stat-l{font-size:9px;color:var(--muted);margin-bottom:2px}
+.hist-stat-v{font-size:12px;font-weight:600}
+
 /* Savings */
 .sav-card{background:var(--bg2);border-radius:var(--r);padding:13px;margin-bottom:8px;border:0.5px solid var(--border)}
 .sav-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
@@ -112,11 +127,14 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Onest'
 .sav-sub{font-size:11px;color:var(--muted);margin-top:2px}
 .sav-pct{font-size:16px;font-weight:700}
 .prog{background:var(--bg3);border-radius:3px;height:6px;overflow:hidden;margin-bottom:9px}
-.prog-fill{height:100%;border-radius:3px;transition:width .4s}
+.prog-fill{height:100%;border-radius:3px;transition:width .5s cubic-bezier(.25,.46,.45,.94)}
 .sav-foot{display:flex;gap:7px}
 .sav-inp{flex:1;background:var(--bg3);border:0.5px solid var(--border2);border-radius:8px;padding:8px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none}
 .btn-green{padding:8px 12px;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;border:none;font-family:inherit;background:rgba(74,222,128,.12);color:var(--green)}
 .btn-red{padding:8px 10px;border-radius:8px;font-size:12px;cursor:pointer;border:none;font-family:inherit;background:rgba(248,113,113,.1);color:var(--red)}
+.color-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.color-swatch{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:border .15s}
+.color-swatch.selected{border-color:var(--text)}
 
 /* Reminders */
 .rem-list-card{background:var(--bg2);border-radius:var(--r);border:0.5px solid var(--border);overflow:hidden}
@@ -133,7 +151,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Onest'
 .tag-p{background:rgba(96,165,250,.12);color:var(--blue)}
 .rem-del{background:none;border:none;color:var(--muted);font-size:17px;cursor:pointer}
 
-/* Joint tab */
+/* Joint */
 .joint-header{background:var(--bg2);border-radius:var(--r);padding:14px;margin-bottom:10px;border:0.5px solid var(--border)}
 .joint-total-label{font-size:11px;color:var(--muted);text-align:center;margin-bottom:4px}
 .joint-total{font-size:28px;font-weight:700;text-align:center;letter-spacing:-0.5px;margin-bottom:12px}
@@ -141,7 +159,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Onest'
 .joint-stat{background:var(--bg3);border-radius:9px;padding:8px 10px;text-align:center}
 .joint-stat-l{font-size:9px;color:var(--muted);margin-bottom:3px}
 .joint-stat-v{font-size:13px;font-weight:600}
-
 .profile-section{margin-bottom:14px}
 .profile-section-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
 .ps-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
@@ -153,12 +170,11 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Onest'
 .ps-tx-mini{background:var(--bg2);border-radius:10px;border:0.5px solid var(--border);overflow:hidden}
 .ps-tx-item{display:flex;align-items:center;gap:8px;padding:9px 11px;border-bottom:0.5px solid var(--border);font-size:12px}
 .ps-tx-item:last-child{border-bottom:none}
-
 .chart-card{background:var(--bg2);border-radius:var(--r);padding:14px;margin-bottom:10px;border:0.5px solid var(--border)}
 
 /* Toast */
-.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--bg3);border:0.5px solid var(--border2);color:var(--text);padding:10px 20px;border-radius:20px;font-size:13px;z-index:999;opacity:0;transition:all .25s;pointer-events:none;white-space:nowrap}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--bg3);border:0.5px solid var(--border2);color:var(--text);padding:10px 18px;border-radius:20px;font-size:13px;z-index:9999;opacity:0;transition:all .25s;pointer-events:none;white-space:nowrap;max-width:90vw}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
 .empty{text-align:center;padding:28px 16px;color:var(--muted);font-size:13px}
 
 /* PIN screen */
@@ -181,11 +197,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Onest'
 .pin-error{font-size:12px;color:var(--red);text-align:center;min-height:18px;margin-bottom:8px}
 #pin-login-view{display:flex;flex-direction:column;align-items:center;width:100%;max-width:320px}
 #pin-register-view{display:flex;flex-direction:column;align-items:center;width:100%;max-width:320px}
-
-/* Color swatches for new profile */
-.color-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;justify-content:center}
-.color-swatch{width:28px;height:28px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:border .15s}
-.color-swatch.selected{border-color:var(--text)}
+.color-row-reg{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;justify-content:center}
 
 /* Planner */
 .day-group{margin-bottom:14px}
@@ -197,6 +209,29 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Onest'
 .day-badge.overdue{background:rgba(248,113,113,.12);color:var(--red)}
 input[type="date"]{color-scheme:dark}
 
+/* Modal base */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;display:flex;align-items:flex-end;justify-content:center;padding:0}
+.modal-overlay.hidden{display:none}
+.modal-sheet{background:var(--bg2);border-radius:24px 24px 0 0;padding:20px 16px 32px;width:100%;max-width:480px;max-height:90dvh;overflow-y:auto;border-top:0.5px solid var(--border2)}
+.modal-handle{width:36px;height:4px;background:var(--bg4);border-radius:2px;margin:0 auto 16px}
+.modal-title{font-size:16px;font-weight:600;margin-bottom:16px;text-align:center}
+
+/* Categories */
+.cat-row{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg3);border-radius:10px;margin-bottom:5px}
+.cat-emoji{font-size:19px;width:30px;text-align:center;flex-shrink:0}
+.cat-name{flex:1;font-size:13px}
+.cat-badge{font-size:10px;color:var(--muted);padding:2px 8px;background:var(--bg4);border-radius:20px}
+.cat-edit-btn{background:none;border:none;color:var(--muted2);font-size:14px;cursor:pointer;padding:3px 5px;line-height:1}
+.cat-del-btn{background:none;border:none;color:var(--red);font-size:16px;cursor:pointer;padding:3px 4px;line-height:1}
+
+/* Settings section inside categories modal */
+.section-label{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.6px;margin:14px 0 7px}
+
+/* Danger zone */
+.danger-btn{width:100%;padding:12px;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;border:none;background:rgba(248,113,113,.1);color:var(--red);font-family:inherit}
+.danger-btn:active{opacity:.7}
+
+/* PIN screen animations */
 @keyframes pinBtnFall{
   0%{transform:translateY(0) rotate(0deg);opacity:1}
   20%{transform:translateY(-8px) rotate(var(--r,2deg));opacity:1}
@@ -251,25 +286,15 @@ input[type="date"]{color-scheme:dark}
     <div class="pin-title">Введи PIN</div>
     <div class="pin-sub">4 цифры от твоего аккаунта</div>
     <div class="pin-dots" id="pin-dots">
-      <div class="pin-dot" id="d0"></div>
-      <div class="pin-dot" id="d1"></div>
-      <div class="pin-dot" id="d2"></div>
-      <div class="pin-dot" id="d3"></div>
+      <div class="pin-dot" id="d0"></div><div class="pin-dot" id="d1"></div>
+      <div class="pin-dot" id="d2"></div><div class="pin-dot" id="d3"></div>
     </div>
     <div class="pin-error" id="pin-error"></div>
     <div class="pin-pad">
-      <div class="pin-btn" onclick="pinPress('1')">1</div>
-      <div class="pin-btn" onclick="pinPress('2')">2</div>
-      <div class="pin-btn" onclick="pinPress('3')">3</div>
-      <div class="pin-btn" onclick="pinPress('4')">4</div>
-      <div class="pin-btn" onclick="pinPress('5')">5</div>
-      <div class="pin-btn" onclick="pinPress('6')">6</div>
-      <div class="pin-btn" onclick="pinPress('7')">7</div>
-      <div class="pin-btn" onclick="pinPress('8')">8</div>
-      <div class="pin-btn" onclick="pinPress('9')">9</div>
-      <div class="pin-btn empty"></div>
-      <div class="pin-btn" onclick="pinPress('0')">0</div>
-      <div class="pin-btn del" onclick="pinDel()">⌫</div>
+      <div class="pin-btn" onclick="pinPress('1')">1</div><div class="pin-btn" onclick="pinPress('2')">2</div><div class="pin-btn" onclick="pinPress('3')">3</div>
+      <div class="pin-btn" onclick="pinPress('4')">4</div><div class="pin-btn" onclick="pinPress('5')">5</div><div class="pin-btn" onclick="pinPress('6')">6</div>
+      <div class="pin-btn" onclick="pinPress('7')">7</div><div class="pin-btn" onclick="pinPress('8')">8</div><div class="pin-btn" onclick="pinPress('9')">9</div>
+      <div class="pin-btn empty"></div><div class="pin-btn" onclick="pinPress('0')">0</div><div class="pin-btn del" onclick="pinDel()">⌫</div>
     </div>
     <div class="pin-mode-switch">
       <span class="pin-link" onclick="showRegister()">Нет аккаунта? Создать</span>
@@ -279,29 +304,19 @@ input[type="date"]{color-scheme:dark}
   <div id="pin-register-view" style="display:none;width:100%;max-width:320px;text-align:center">
     <div class="pin-logo">✨</div>
     <div class="pin-title" style="margin-bottom:1.5rem">Новый аккаунт</div>
-    <div class="color-row" id="reg-color-row" style="justify-content:center;margin-bottom:16px"></div>
+    <div class="color-row-reg" id="reg-color-row"></div>
     <input id="reg-name" placeholder="Твоё имя..." maxlength="20" style="width:100%;background:var(--bg2);border:0.5px solid var(--border2);border-radius:10px;padding:12px 14px;color:var(--text);font-size:15px;font-family:inherit;outline:none;margin-bottom:10px" />
     <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Придумай PIN (4 цифры)</div>
     <div class="pin-dots" id="reg-dots" style="justify-content:center">
-      <div class="pin-dot" id="rd0"></div>
-      <div class="pin-dot" id="rd1"></div>
-      <div class="pin-dot" id="rd2"></div>
-      <div class="pin-dot" id="rd3"></div>
+      <div class="pin-dot" id="rd0"></div><div class="pin-dot" id="rd1"></div>
+      <div class="pin-dot" id="rd2"></div><div class="pin-dot" id="rd3"></div>
     </div>
     <div class="pin-error" id="reg-error"></div>
     <div class="pin-pad" style="margin:0 auto">
-      <div class="pin-btn" onclick="regPress('1')">1</div>
-      <div class="pin-btn" onclick="regPress('2')">2</div>
-      <div class="pin-btn" onclick="regPress('3')">3</div>
-      <div class="pin-btn" onclick="regPress('4')">4</div>
-      <div class="pin-btn" onclick="regPress('5')">5</div>
-      <div class="pin-btn" onclick="regPress('6')">6</div>
-      <div class="pin-btn" onclick="regPress('7')">7</div>
-      <div class="pin-btn" onclick="regPress('8')">8</div>
-      <div class="pin-btn" onclick="regPress('9')">9</div>
-      <div class="pin-btn empty"></div>
-      <div class="pin-btn" onclick="regPress('0')">0</div>
-      <div class="pin-btn del" onclick="regDel()">⌫</div>
+      <div class="pin-btn" onclick="regPress('1')">1</div><div class="pin-btn" onclick="regPress('2')">2</div><div class="pin-btn" onclick="regPress('3')">3</div>
+      <div class="pin-btn" onclick="regPress('4')">4</div><div class="pin-btn" onclick="regPress('5')">5</div><div class="pin-btn" onclick="regPress('6')">6</div>
+      <div class="pin-btn" onclick="regPress('7')">7</div><div class="pin-btn" onclick="regPress('8')">8</div><div class="pin-btn" onclick="regPress('9')">9</div>
+      <div class="pin-btn empty"></div><div class="pin-btn" onclick="regPress('0')">0</div><div class="pin-btn del" onclick="regDel()">⌫</div>
     </div>
     <div class="pin-mode-switch">
       <span class="pin-link" onclick="showLogin()">Уже есть аккаунт</span>
@@ -318,23 +333,22 @@ input[type="date"]{color-scheme:dark}
         <span class="pb-name" id="pb-name">Загрузка...</span>
         <span class="pb-arrow">▾</span>
       </div>
-      <div style="display:flex;align-items:center;gap:6px">
+      <div class="header-actions">
+        <div class="icon-btn" onclick="openSettingsModal()" title="Настройки">⚙️</div>
         <img src="/static/icon-32.png" style="width:22px;height:22px;border-radius:6px" />
-        <button class="sync-btn" id="sync-btn" onclick="loadAll()">↻ Обновить</button>
+        <button class="sync-btn" id="sync-btn" onclick="loadAll()">↻</button>
       </div>
     </div>
-    <div style="display:flex;gap:6px;margin-bottom:10px;justify-content:flex-end">
-      <button class="sync-btn" onclick="showChangePinModal()" style="font-size:11px">🔑 Сменить PIN</button>
-    </div>
-    <div class="bal-label">Баланс</div>
+    <div class="bal-label">Свободный бюджет</div>
     <div class="bal-amount bal-pos" id="balance-val">0 ₽</div>
     <div class="mini-row">
-      <div class="mini-c"><div class="mini-l">Доходы</div><div class="mini-v" style="color:var(--green)" id="income-val">0 ₽</div></div>
-      <div class="mini-c"><div class="mini-l">Расходы</div><div class="mini-v" style="color:var(--red)" id="expense-val">0 ₽</div></div>
+      <div class="mini-c"><div class="mini-l">↑ Доходы</div><div class="mini-v" style="color:var(--green)" id="income-val">0 ₽</div></div>
+      <div class="mini-c"><div class="mini-l">↓ Расходы</div><div class="mini-v" style="color:var(--red)" id="expense-val">0 ₽</div></div>
+      <div class="mini-c"><div class="mini-l">🎯 В копилке</div><div class="mini-v" style="color:var(--amber)" id="saved-val">0 ₽</div></div>
     </div>
   </div>
 
-  <div class="content">
+  <div class="content" id="main-content">
     <!-- HOME -->
     <div id="sec-home" class="section active">
       <div class="card">
@@ -345,22 +359,15 @@ input[type="date"]{color-scheme:dark}
         </div>
         <input class="inp" id="qa-name" placeholder="Название..." />
         <div class="inp-row">
-          <input class="inp2" id="qa-amt" type="number" placeholder="Сумма ₽" />
-          <select class="inp2" id="qa-cat">
-            <option value="Еда">🍕 Еда</option>
-            <option value="Транспорт">🚗 Транспорт</option>
-            <option value="Развлечения">🎮 Развлечения</option>
-            <option value="Подписки">📱 Подписки</option>
-            <option value="Одежда">👕 Одежда</option>
-            <option value="Техника">💻 Техника</option>
-            <option value="Здоровье">💊 Здоровье</option>
-            <option value="Коммуналка">🏠 Коммуналка</option>
-            <option value="Зарплата">💼 Зарплата</option>
-            <option value="Подработка">🔧 Подработка</option>
-            <option value="Другое">📦 Другое</option>
-          </select>
+          <input class="inp2" id="qa-amt" type="number" placeholder="Сумма ₽" min="0.01" />
+          <div style="position:relative">
+            <select class="inp2" id="qa-cat" style="padding-right:8px"></select>
+          </div>
         </div>
-        <button class="big-btn" onclick="addTransaction()">Добавить</button>
+        <div style="display:flex;gap:7px;align-items:center">
+          <button class="big-btn" style="flex:1" onclick="addTransaction()">Добавить</button>
+          <div class="icon-btn" onclick="openCatsModal()" title="Категории" style="flex-shrink:0">🏷️</div>
+        </div>
       </div>
       <div class="sect-lbl">Последние транзакции</div>
       <div id="home-tx"></div>
@@ -376,7 +383,8 @@ input[type="date"]{color-scheme:dark}
 
     <!-- HISTORY -->
     <div id="sec-history" class="section">
-      <div class="sect-lbl">Все транзакции</div>
+      <div class="month-filter" id="month-filter"></div>
+      <div class="hist-summary" id="hist-summary"></div>
       <div id="all-tx"></div>
     </div>
 
@@ -386,9 +394,10 @@ input[type="date"]{color-scheme:dark}
         <div class="card-title">Новая цель накоплений</div>
         <input class="inp" id="ns-name" placeholder="Название цели..." />
         <div class="inp-row">
-          <input class="inp2" id="ns-target" type="number" placeholder="Нужно ₽" />
-          <input class="inp2" id="ns-current" type="number" placeholder="Уже есть ₽" />
+          <input class="inp2" id="ns-target" type="number" placeholder="Нужно ₽" min="1" />
+          <input class="inp2" id="ns-current" type="number" placeholder="Уже отложено ₽" min="0" />
         </div>
+        <div class="color-row" id="sav-color-row"></div>
         <button class="big-btn" onclick="addSaving()">Создать цель</button>
       </div>
       <div id="savings-list"></div>
@@ -420,10 +429,10 @@ input[type="date"]{color-scheme:dark}
       </div>
 
       <div style="display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:2px" id="rem-filters">
-        <button onclick="setRemFilter('all')" id="rf-all" style="display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:500;white-space:nowrap;cursor:pointer;background:rgba(74,222,128,.1);border:1.5px solid #4ade80;color:#4ade80">☰ Все</button>
-        <button onclick="setRemFilter('urgent')" id="rf-urgent" style="display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:500;white-space:nowrap;cursor:pointer;background:var(--bg2);border:0.5px solid var(--border);color:var(--muted)"><span style="width:6px;height:6px;border-radius:50%;background:#f87171;display:inline-block"></span>Срочно</button>
-        <button onclick="setRemFilter('soon')" id="rf-soon" style="display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:500;white-space:nowrap;cursor:pointer;background:var(--bg2);border:0.5px solid var(--border);color:var(--muted)"><span style="width:6px;height:6px;border-radius:50%;background:#fbbf24;display:inline-block"></span>Скоро</button>
-        <button onclick="setRemFilter('endless')" id="rf-endless" style="display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:500;white-space:nowrap;cursor:pointer;background:var(--bg2);border:0.5px solid var(--border);color:var(--muted)">∞ Бессрочно</button>
+        <button onclick="setRemFilter('all')" id="rf-all" style="display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:500;white-space:nowrap;cursor:pointer;background:rgba(74,222,128,.1);border:1.5px solid #4ade80;color:#4ade80;font-family:inherit">☰ Все</button>
+        <button onclick="setRemFilter('urgent')" id="rf-urgent" style="display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:500;white-space:nowrap;cursor:pointer;background:var(--bg2);border:0.5px solid var(--border);color:var(--muted);font-family:inherit"><span style="width:6px;height:6px;border-radius:50%;background:#f87171;display:inline-block"></span>Срочно</button>
+        <button onclick="setRemFilter('soon')" id="rf-soon" style="display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:500;white-space:nowrap;cursor:pointer;background:var(--bg2);border:0.5px solid var(--border);color:var(--muted);font-family:inherit"><span style="width:6px;height:6px;border-radius:50%;background:#fbbf24;display:inline-block"></span>Скоро</button>
+        <button onclick="setRemFilter('endless')" id="rf-endless" style="display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:500;white-space:nowrap;cursor:pointer;background:var(--bg2);border:0.5px solid var(--border);color:var(--muted);font-family:inherit">∞ Бессрочно</button>
       </div>
 
       <div id="rem-list"></div>
@@ -470,12 +479,12 @@ input[type="date"]{color-scheme:dark}
     <div style="font-size:16px;font-weight:600;margin-bottom:4px;text-align:center">Сменить PIN</div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:20px;text-align:center">Введи текущий и новый PIN</div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Текущий PIN:</div>
-    <div style="display:flex;gap:10px;justify-content:center;margin-bottom:16px" id="cp-old-dots">
+    <div style="display:flex;gap:10px;justify-content:center;margin-bottom:16px">
       <div class="pin-dot" id="co0"></div><div class="pin-dot" id="co1"></div>
       <div class="pin-dot" id="co2"></div><div class="pin-dot" id="co3"></div>
     </div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Новый PIN:</div>
-    <div style="display:flex;gap:10px;justify-content:center;margin-bottom:16px" id="cp-new-dots">
+    <div style="display:flex;gap:10px;justify-content:center;margin-bottom:16px">
       <div class="pin-dot" id="cn0"></div><div class="pin-dot" id="cn1"></div>
       <div class="pin-dot" id="cn2"></div><div class="pin-dot" id="cn3"></div>
     </div>
@@ -490,6 +499,78 @@ input[type="date"]{color-scheme:dark}
   </div>
 </div>
 
+<!-- Categories modal -->
+<div id="cats-modal" class="modal-overlay hidden">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🏷️ Категории</div>
+
+    <div style="background:var(--bg3);border-radius:12px;padding:12px;margin-bottom:4px">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-weight:500">НОВАЯ КАТЕГОРИЯ</div>
+      <div style="display:flex;gap:7px">
+        <input id="new-cat-emoji" placeholder="😊" maxlength="4" style="width:50px;background:var(--bg2);border:0.5px solid var(--border2);border-radius:9px;padding:9px 4px;color:var(--text);font-size:20px;font-family:inherit;outline:none;text-align:center" />
+        <input id="new-cat-name" placeholder="Название..." maxlength="24" style="flex:1;background:var(--bg2);border:0.5px solid var(--border2);border-radius:9px;padding:9px 12px;color:var(--text);font-size:14px;font-family:inherit;outline:none" />
+        <button onclick="addCategory()" style="padding:9px 14px;border-radius:9px;background:var(--text);color:var(--bg);border:none;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">+</button>
+      </div>
+    </div>
+
+    <div class="section-label">СТАНДАРТНЫЕ</div>
+    <div id="default-cats-list"></div>
+
+    <div class="section-label">МОИ КАТЕГОРИИ</div>
+    <div id="custom-cats-list"></div>
+
+    <div style="margin-top:18px">
+      <button onclick="closeCatsModal()" style="width:100%;padding:12px;border-radius:10px;background:var(--bg3);color:var(--muted2);border:0.5px solid var(--border2);font-size:14px;cursor:pointer;font-family:inherit">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings modal -->
+<div id="settings-modal" class="modal-overlay hidden">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">⚙️ Настройки</div>
+
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button onclick="hideSettingsModal();showChangePinModal()" style="width:100%;padding:13px;border-radius:10px;background:var(--bg3);color:var(--text);border:0.5px solid var(--border2);font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;text-align:left">🔑 Сменить PIN</button>
+      <button onclick="hideSettingsModal();openCatsModal()" style="width:100%;padding:13px;border-radius:10px;background:var(--bg3);color:var(--text);border:0.5px solid var(--border2);font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;text-align:left">🏷️ Категории</button>
+      <button onclick="hideSettingsModal();requestPushPermission()" style="width:100%;padding:13px;border-radius:10px;background:var(--bg3);color:var(--text);border:0.5px solid var(--border2);font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;text-align:left">🔔 Включить уведомления</button>
+    </div>
+
+    <div style="margin-top:20px;padding-top:16px;border-top:0.5px solid var(--border)">
+      <div style="font-size:11px;color:var(--red);font-weight:600;letter-spacing:.6px;margin-bottom:10px">ОПАСНАЯ ЗОНА</div>
+      <button onclick="confirmDeleteAccount()" class="danger-btn">🗑️ Удалить аккаунт</button>
+      <div style="font-size:11px;color:var(--muted);margin-top:7px;text-align:center">Все данные будут удалены без возможности восстановления</div>
+    </div>
+
+    <div style="margin-top:14px">
+      <button onclick="hideSettingsModal()" style="width:100%;padding:12px;border-radius:10px;background:var(--bg3);color:var(--muted2);border:0.5px solid var(--border2);font-size:14px;cursor:pointer;font-family:inherit">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm delete account modal -->
+<div id="confirm-delete-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:10000;align-items:center;justify-content:center;padding:1.5rem">
+  <div style="background:var(--bg2);border-radius:20px;padding:24px;width:100%;max-width:320px;border:0.5px solid rgba(248,113,113,.3)">
+    <div style="font-size:32px;text-align:center;margin-bottom:12px">⚠️</div>
+    <div style="font-size:16px;font-weight:600;text-align:center;margin-bottom:8px">Удалить аккаунт?</div>
+    <div style="font-size:13px;color:var(--muted2);text-align:center;margin-bottom:6px">Для подтверждения введи свой PIN</div>
+    <div style="display:flex;gap:10px;justify-content:center;margin-bottom:16px" id="del-confirm-dots">
+      <div class="pin-dot" id="dc0"></div><div class="pin-dot" id="dc1"></div>
+      <div class="pin-dot" id="dc2"></div><div class="pin-dot" id="dc3"></div>
+    </div>
+    <div class="pin-error" id="dc-error" style="margin-bottom:10px"></div>
+    <div class="pin-pad" style="margin:0 auto 16px">
+      <div class="pin-btn" onclick="dcPress('1')">1</div><div class="pin-btn" onclick="dcPress('2')">2</div><div class="pin-btn" onclick="dcPress('3')">3</div>
+      <div class="pin-btn" onclick="dcPress('4')">4</div><div class="pin-btn" onclick="dcPress('5')">5</div><div class="pin-btn" onclick="dcPress('6')">6</div>
+      <div class="pin-btn" onclick="dcPress('7')">7</div><div class="pin-btn" onclick="dcPress('8')">8</div><div class="pin-btn" onclick="dcPress('9')">9</div>
+      <div class="pin-btn empty"></div><div class="pin-btn" onclick="dcPress('0')">0</div><div class="pin-btn del" onclick="dcDel()">⌫</div>
+    </div>
+    <button onclick="hideConfirmDeleteModal()" style="width:100%;padding:12px;border-radius:10px;background:var(--bg3);color:var(--muted2);border:0.5px solid var(--border2);font-size:14px;cursor:pointer;font-family:inherit">Отмена</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -497,22 +578,80 @@ input[type="date"]{color-scheme:dark}
 const API = '';
 const COLORS = ['#60a5fa','#4ade80','#fbbf24','#f87171','#a78bfa','#2dd4bf','#fb923c','#e879f9'];
 const PROFILE_COLORS = ['#60a5fa','#f87171','#4ade80','#fbbf24','#a78bfa','#2dd4bf','#fb923c'];
-let selColor = PROFILE_COLORS[0];
-let regColor = PROFILE_COLORS[0];
+const SAV_COLORS = ['#60a5fa','#4ade80','#fbbf24','#f87171','#a78bfa','#2dd4bf','#fb923c','#e879f9'];
+const DEFAULT_CATEGORIES = [
+  {emoji:'🍕',name:'Еда'},{emoji:'🚗',name:'Транспорт'},{emoji:'🎮',name:'Развлечения'},
+  {emoji:'📱',name:'Подписки'},{emoji:'👕',name:'Одежда'},{emoji:'💻',name:'Техника'},
+  {emoji:'💊',name:'Здоровье'},{emoji:'🏠',name:'Коммуналка'},{emoji:'💼',name:'Зарплата'},
+  {emoji:'🔧',name:'Подработка'},{emoji:'📦',name:'Другое'},
+];
 
+let regColor = PROFILE_COLORS[0];
+let newSavColor = SAV_COLORS[0];
 let currentUser = null;
-let allTx = [], allSav = [], allRem = [];
+let allTx = [], allSav = [], allRem = [], allCats = [];
 let txType = 'expense';
 let catChartInst = null, jointChartInst = null;
+let historyMonth = 'all';
+let remFilter = 'all';
+let isEndlessMode = false;
+let selectedDate = new Date().toISOString().slice(0,10);
+let weekOffset = 0;
 
+// --- Undo state ---
+let _undoTimer = null;
+let _undoOnUndo = null;
+let _undoOnConfirm = null;
+
+// --- Utils ---
 function fmt(n){ return Math.round(n).toLocaleString('ru-RU') + ' ₽'; }
 function initials(name){ return name.slice(0,2).toUpperCase(); }
+function haptic(ms=5){ navigator.vibrate && navigator.vibrate(ms); }
+
+function getCatEmoji(name){
+  const def = DEFAULT_CATEGORIES.find(c=>c.name===name);
+  if(def) return def.emoji;
+  const cust = allCats.find(c=>c.name===name);
+  return cust ? cust.emoji : '📦';
+}
 
 function toast(msg){
+  clearUndoPending();
   const el = document.getElementById('toast');
-  el.textContent = msg; el.classList.add('show');
+  el.textContent = msg;
+  el.classList.add('show');
   setTimeout(()=>el.classList.remove('show'), 2000);
 }
+
+function showUndoToast(msg, onUndo, onConfirm){
+  clearUndoPending();
+  _undoOnUndo = onUndo;
+  _undoOnConfirm = onConfirm;
+  const el = document.getElementById('toast');
+  el.innerHTML = `<span>${escHtml(msg)}</span><span id="undo-btn" style="color:var(--blue);font-weight:600;cursor:pointer;margin-left:10px;text-decoration:underline;text-underline-offset:2px">Отменить</span>`;
+  el.classList.add('show');
+  const btn = document.getElementById('undo-btn');
+  if(btn) btn.onclick = ()=>{
+    clearTimeout(_undoTimer); _undoTimer = null;
+    el.classList.remove('show');
+    if(_undoOnUndo){ _undoOnUndo(); }
+    _undoOnUndo = null; _undoOnConfirm = null;
+  };
+  _undoTimer = setTimeout(()=>{
+    el.classList.remove('show');
+    el.innerHTML = '';
+    if(_undoOnConfirm){ _undoOnConfirm().catch(()=>{}); }
+    _undoOnUndo = null; _undoOnConfirm = null; _undoTimer = null;
+  }, 3500);
+}
+
+function clearUndoPending(){
+  if(_undoTimer){ clearTimeout(_undoTimer); _undoTimer = null; }
+  if(_undoOnConfirm){ _undoOnConfirm().catch(()=>{}); _undoOnConfirm = null; }
+  _undoOnUndo = null;
+}
+
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 async function apiFetch(method, path, body){
   const opts = {method, headers:{'Content-Type':'application/json'}};
@@ -522,10 +661,7 @@ async function apiFetch(method, path, body){
   return r.json();
 }
 
-// --- PIN screen ---
-let pinVal = '';
-let regVal = '';
-
+// --- Color pickers ---
 function renderRegColorRow(){
   const el = document.getElementById('reg-color-row');
   if(!el) return;
@@ -535,13 +671,31 @@ function renderRegColorRow(){
 }
 function selectRegColor(c){ regColor=c; renderRegColorRow(); }
 
+function renderSavColorRow(){
+  const el = document.getElementById('sav-color-row');
+  if(!el) return;
+  el.innerHTML = SAV_COLORS.map(c=>`
+    <div class="color-swatch ${c===newSavColor?'selected':''}" style="background:${c}" onclick="selectSavColor('${c}')"></div>
+  `).join('');
+}
+function selectSavColor(c){ newSavColor=c; renderSavColorRow(); }
+
+// --- Category select ---
+function renderCategorySelects(){
+  const allOpts = [...DEFAULT_CATEGORIES, ...allCats.map(c=>({emoji:c.emoji,name:c.name}))];
+  const html = allOpts.map(c=>`<option value="${escHtml(c.name)}">${c.emoji} ${escHtml(c.name)}</option>`).join('');
+  document.getElementById('qa-cat').innerHTML = html;
+}
+
+// --- PIN screen ---
+let pinVal = '', regVal = '';
+
 function showLogin(){
   document.getElementById('pin-login-view').style.display='';
   document.getElementById('pin-register-view').style.display='none';
   pinVal=''; updatePinDots();
   document.getElementById('pin-error').textContent='';
 }
-
 function showRegister(){
   document.getElementById('pin-login-view').style.display='none';
   document.getElementById('pin-register-view').style.display='';
@@ -549,55 +703,33 @@ function showRegister(){
   document.getElementById('reg-error').textContent='';
   renderRegColorRow();
 }
-
 function showPinScreen(){
   document.getElementById('pin-screen').classList.remove('hidden');
   document.getElementById('main-app').style.display='none';
   showLogin();
 }
-
 function updatePinDots(){
   for(let i=0;i<4;i++){
     const d=document.getElementById(`d${i}`);
-    d.classList.toggle('filled', i<pinVal.length);
+    d.classList.toggle('filled',i<pinVal.length);
     d.classList.remove('error');
   }
 }
-
 function updateRegDots(){
   for(let i=0;i<4;i++){
     const d=document.getElementById(`rd${i}`);
-    d.classList.toggle('filled', i<regVal.length);
+    d.classList.toggle('filled',i<regVal.length);
     d.classList.remove('error');
   }
 }
-
 function pinError(){
   for(let i=0;i<4;i++) document.getElementById(`d${i}`).classList.add('error');
   setTimeout(()=>{ pinVal=''; updatePinDots(); }, 600);
 }
-
-function pinPress(d){
-  if(pinVal.length>=4) return;
-  pinVal+=d; updatePinDots();
-  if(pinVal.length===4) setTimeout(doLogin, 100);
-}
-
-function pinDel(){
-  pinVal=pinVal.slice(0,-1); updatePinDots();
-  document.getElementById('pin-error').textContent='';
-}
-
-function regPress(d){
-  if(regVal.length>=4) return;
-  regVal+=d; updateRegDots();
-  if(regVal.length===4) setTimeout(doRegister, 100);
-}
-
-function regDel(){
-  regVal=regVal.slice(0,-1); updateRegDots();
-  document.getElementById('reg-error').textContent='';
-}
+function pinPress(d){ if(pinVal.length>=4) return; pinVal+=d; updatePinDots(); if(pinVal.length===4) setTimeout(doLogin,100); }
+function pinDel(){ pinVal=pinVal.slice(0,-1); updatePinDots(); document.getElementById('pin-error').textContent=''; }
+function regPress(d){ if(regVal.length>=4) return; regVal+=d; updateRegDots(); if(regVal.length===4) setTimeout(doRegister,100); }
+function regDel(){ regVal=regVal.slice(0,-1); updateRegDots(); document.getElementById('reg-error').textContent=''; }
 
 async function doLogin(){
   try{
@@ -609,7 +741,6 @@ async function doLogin(){
     pinError();
   }
 }
-
 async function doRegister(){
   const name = document.getElementById('reg-name').value.trim();
   if(!name){ document.getElementById('reg-error').textContent='Введи имя'; regVal=''; updateRegDots(); return; }
@@ -623,34 +754,20 @@ async function doRegister(){
     regVal=''; updateRegDots();
   }
 }
-
 function enterApp(user){
   currentUser = user;
   updateProfileBadge();
-
   const screen = document.getElementById('pin-screen');
   const app = document.getElementById('main-app');
-
-  // Phase 1: shake + buttons fall
   screen.classList.add('glitching');
-
+  setTimeout(()=>{ screen.classList.remove('glitching'); screen.classList.add('dissolving'); }, 450);
   setTimeout(()=>{
-    // Phase 2: whole screen dissolves
-    screen.classList.remove('glitching');
-    screen.classList.add('dissolving');
-  }, 450);
-
-  setTimeout(()=>{
-    // Phase 3: app appears
-    screen.classList.add('hidden');
-    screen.classList.remove('dissolving');
-    app.style.display='flex';
-    app.classList.add('reveal');
+    screen.classList.add('hidden'); screen.classList.remove('dissolving');
+    app.style.display='flex'; app.classList.add('reveal');
     setTimeout(()=>app.classList.remove('reveal'), 400);
     loadAll();
   }, 800);
 }
-
 function updateProfileBadge(){
   if(!currentUser) return;
   const av = document.getElementById('pb-avatar');
@@ -666,82 +783,133 @@ function updateProfileBadge(){
 async function loadAll(){
   if(!currentUser) return;
   const btn = document.getElementById('sync-btn');
-  btn.textContent = '↻ ...'; btn.classList.add('spin');
+  btn.textContent='↻ ...'; btn.classList.add('spin');
   const uid = currentUser.id;
-  try {
-    [allTx, allSav, allRem] = await Promise.all([
-      apiFetch('GET', `/api/transactions?user_id=${uid}`),
-      apiFetch('GET', `/api/savings?user_id=${uid}`),
-      apiFetch('GET', `/api/reminders?user_id=${uid}`)
+  try{
+    [allTx, allSav, allRem, allCats] = await Promise.all([
+      apiFetch('GET',`/api/transactions?user_id=${uid}`),
+      apiFetch('GET',`/api/savings?user_id=${uid}`),
+      apiFetch('GET',`/api/reminders?user_id=${uid}`),
+      apiFetch('GET',`/api/categories?user_id=${uid}`),
     ]);
+    renderCategorySelects();
     renderAll();
-  } catch(e){ toast('Ошибка загрузки'); }
-  btn.textContent = '↻ Обновить'; btn.classList.remove('spin');
+  }catch(e){ toast('Ошибка загрузки'); }
+  btn.textContent='↻'; btn.classList.remove('spin');
 }
 
 function renderAll(){
   renderHeader(); renderHomeTx(); renderAllTx();
   renderSavings(); renderReminders(); renderCatChart(); renderInsights();
+  renderMonthFilter();
 }
 
+// --- Header ---
 function renderHeader(){
-  const inc = allTx.filter(t=>t.type==='income').reduce((a,t)=>a+t.amount,0);
-  const exp = allTx.filter(t=>t.type==='expense').reduce((a,t)=>a+t.amount,0);
-  const bal = inc - exp;
-  const bel = document.getElementById('balance-val');
-  bel.textContent = fmt(Math.abs(bal));
-  bel.className = 'bal-amount ' + (bal>=0?'bal-pos':'bal-neg');
-  document.getElementById('income-val').textContent = fmt(inc);
+  const inc  = allTx.filter(t=>t.type==='income').reduce((a,t)=>a+t.amount,0);
+  const exp  = allTx.filter(t=>t.type==='expense').reduce((a,t)=>a+t.amount,0);
+  const saved = allSav.reduce((a,s)=>a+s.current,0);
+  const bal  = inc - exp - saved;
+  const bel  = document.getElementById('balance-val');
+  const newTxt = fmt(Math.abs(bal));
+  if(bel.textContent !== newTxt){
+    bel.textContent = newTxt;
+    bel.className = 'bal-amount ' + (bal>=0?'bal-pos':'bal-neg') + ' pulse';
+    setTimeout(()=>bel.classList.remove('pulse'), 280);
+  }
+  document.getElementById('income-val').textContent  = fmt(inc);
   document.getElementById('expense-val').textContent = fmt(exp);
+  document.getElementById('saved-val').textContent   = fmt(saved);
 }
 
+// --- Transactions ---
 function txHTML(t, del=true){
+  const emoji = getCatEmoji(t.category);
   return `<div class="tx-item">
     <div class="tx-dot ${t.type==='income'?'dot-g':'dot-r'}"></div>
-    <div class="tx-info"><div class="tx-n">${t.name}</div><div class="tx-m">${t.category} · ${t.date}</div></div>
+    <div class="tx-info"><div class="tx-n">${escHtml(t.name)}</div><div class="tx-m">${emoji} ${escHtml(t.category)} · ${t.date}</div></div>
     <div class="tx-a ${t.type==='income'?'tx-ag':'tx-ar'}">${t.type==='income'?'+':'-'}${fmt(t.amount)}</div>
     ${del?`<button class="tx-del" onclick="delTx('${t.id}')">×</button>`:''}
   </div>`;
 }
-
 function renderHomeTx(){
   const el = document.getElementById('home-tx');
   const r = allTx.slice(0,5);
   el.innerHTML = r.length ? `<div class="tx-list-card">${r.map(t=>txHTML(t)).join('')}</div>` : '<div class="empty">Транзакций пока нет</div>';
 }
 
+// --- Month filter ---
+function getMonthLabel(ym){
+  const months=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+  const [y,m] = ym.split('-');
+  return `${months[parseInt(m)-1]} ${y}`;
+}
+function renderMonthFilter(){
+  const el = document.getElementById('month-filter');
+  if(!el) return;
+  const months = [...new Set(allTx.map(t=>t.created_at?t.created_at.slice(0,7):null).filter(Boolean))].sort().reverse();
+  el.innerHTML = [
+    `<button class="month-pill ${historyMonth==='all'?'active':''}" onclick="setHistoryMonth('all')">Все</button>`,
+    ...months.map(m=>`<button class="month-pill ${historyMonth===m?'active':''}" onclick="setHistoryMonth('${m}')">${getMonthLabel(m)}</button>`)
+  ].join('');
+}
+function setHistoryMonth(m){
+  historyMonth = m;
+  renderMonthFilter();
+  renderAllTx();
+}
 function renderAllTx(){
   const el = document.getElementById('all-tx');
-  el.innerHTML = allTx.length ? `<div class="tx-list-card">${allTx.map(t=>txHTML(t)).join('')}</div>` : '<div class="empty">Транзакций пока нет</div>';
+  const sumEl = document.getElementById('hist-summary');
+  let filtered = allTx;
+  if(historyMonth !== 'all'){
+    filtered = allTx.filter(t=>t.created_at && t.created_at.startsWith(historyMonth));
+  }
+  const inc = filtered.filter(t=>t.type==='income').reduce((a,t)=>a+t.amount,0);
+  const exp = filtered.filter(t=>t.type==='expense').reduce((a,t)=>a+t.amount,0);
+  const bal = inc - exp;
+  sumEl.innerHTML = filtered.length ? `
+    <div class="hist-stat"><div class="hist-stat-l">Доходы</div><div class="hist-stat-v" style="color:var(--green)">${fmt(inc)}</div></div>
+    <div class="hist-stat"><div class="hist-stat-l">Расходы</div><div class="hist-stat-v" style="color:var(--red)">${fmt(exp)}</div></div>
+    <div class="hist-stat"><div class="hist-stat-l">Итог</div><div class="hist-stat-v" style="color:${bal>=0?'var(--green)':'var(--red)'}">${bal>=0?'+':''}${fmt(bal)}</div></div>
+  ` : '';
+  el.innerHTML = filtered.length ? `<div class="tx-list-card">${filtered.map(t=>txHTML(t)).join('')}</div>` : '<div class="empty">Транзакций нет</div>';
 }
 
+// --- Savings ---
 function renderSavings(){
   const el = document.getElementById('savings-list');
   if(!allSav.length){ el.innerHTML='<div class="empty">Нет целей. Добавь первую!</div>'; return; }
-  el.innerHTML = allSav.map((s,i)=>{
-    const pct = Math.min(Math.round(s.current/s.target*100),100);
-    const c = COLORS[i%COLORS.length];
-    return `<div class="sav-card">
+  el.innerHTML = allSav.map(s=>{
+    const pct  = Math.min(Math.round(s.current/s.target*100),100);
+    const left = Math.max(s.target - s.current, 0);
+    const c    = s.color || '#60a5fa';
+    const done = pct >= 100;
+    return `<div class="sav-card" style="${done?'border-color:rgba(74,222,128,.25)':''}">
       <div class="sav-top">
-        <div><div class="sav-name">${s.name}</div><div class="sav-sub">${fmt(s.current)} из ${fmt(s.target)}</div></div>
+        <div>
+          <div class="sav-name">${done?'✅ ':''}${escHtml(s.name)}</div>
+          <div class="sav-sub">${fmt(s.current)} из ${fmt(s.target)}${!done?` · осталось ${fmt(left)}`:' · цель достигнута!'}</div>
+        </div>
         <div class="sav-pct" style="color:${c}">${pct}%</div>
       </div>
       <div class="prog"><div class="prog-fill" style="width:${pct}%;background:${c}"></div></div>
-      <div class="sav-foot">
-        <input class="sav-inp" type="number" placeholder="Пополнить ₽" id="sav-${s.id}" />
+      ${!done?`<div class="sav-foot">
+        <input class="sav-inp" type="number" placeholder="Пополнить ₽" id="sav-${s.id}" min="0.01" />
         <button class="btn-green" onclick="addToSav('${s.id}')">+ Внести</button>
         <button class="btn-red" onclick="delSav('${s.id}')">✕</button>
-      </div>
+      </div>`:`<div class="sav-foot"><button class="btn-red" style="flex:1" onclick="delSav('${s.id}')">Удалить цель</button></div>`}
     </div>`;
   }).join('');
 }
 
+// --- Reminders ---
 function renderReminders(){
   renderWeekPlanner();
   const el = document.getElementById('rem-list');
   const months=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
-  const today=new Date().toISOString().slice(0,10);
-  const tomorrow=new Date(Date.now()+86400000).toISOString().slice(0,10);
+  const today = new Date().toISOString().slice(0,10);
+  const tomorrow = new Date(Date.now()+86400000).toISOString().slice(0,10);
   function fmt2(d){ const [y,m,day]=d.split('-'); return `${parseInt(day)} ${months[parseInt(m)-1].toUpperCase()}`; }
   function dayLabel(d){
     if(d<today) return {text:`${fmt2(d)} — ПРОСРОЧЕНО`,color:'var(--red)'};
@@ -756,7 +924,7 @@ function renderReminders(){
     return `<div style="background:var(--bg2);border-radius:12px;padding:13px;border:0.5px solid var(--border);display:flex;align-items:flex-start;gap:10px;margin-bottom:6px;${r.done?'opacity:.5':''}">
       <div onclick="toggleRem('${r.id}',${!r.done})" style="width:20px;height:20px;border-radius:6px;border:${r.done?'none':'1.5px solid rgba(255,255,255,.2)'};background:${r.done?'#4ade80':'transparent'};display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;margin-top:1px;font-size:11px;color:#000">${r.done?'✓':''}</div>
       <div style="flex:1">
-        <div style="font-size:14px;font-weight:500;color:${r.done?'var(--muted)':'var(--text)'};${r.done?'text-decoration:line-through':''};margin-bottom:5px">${r.text}</div>
+        <div style="font-size:14px;font-weight:500;color:${r.done?'var(--muted)':'var(--text)'};${r.done?'text-decoration:line-through':''};margin-bottom:5px">${escHtml(r.text)}</div>
         <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
           ${r.due_date?`<span style="font-size:11px;color:var(--muted)">📅 ${fmt2(r.due_date)}</span>`:'<span style="font-size:11px;color:var(--muted)">∞ Бессрочно</span>'}
           <span style="font-size:10px;padding:2px 8px;border-radius:20px;background:${tb[r.tag]||'rgba(255,255,255,.07)'};color:${tc[r.tag]||'#888'}">${tl[r.tag]||r.tag}</span>
@@ -765,19 +933,16 @@ function renderReminders(){
       <button onclick="delRem('${r.id}')" style="background:none;border:none;color:var(--muted);font-size:17px;cursor:pointer;padding:0 2px;flex-shrink:0">×</button>
     </div>`;
   }
-
   if(remFilter==='endless'){
     const noDate=allRem.filter(r=>!r.due_date);
     if(!noDate.length){ el.innerHTML='<div class="empty">Бессрочных задач нет</div>'; return; }
     el.innerHTML=`<div style="font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.6px;margin:4px 0 7px 2px">БЕССРОЧНО</div>${noDate.map(remHTML).join('')}`;
     return;
   }
-
-  let dayRems=allRem.filter(r=>r.due_date===selectedDate);
-  const noDateRems=allRem.filter(r=>!r.due_date);
-  if(remFilter==='urgent'){ dayRems=dayRems.filter(r=>r.tag==='urgent'); }
-  else if(remFilter==='soon'){ dayRems=dayRems.filter(r=>r.tag==='soon'); }
-
+  let dayRems = allRem.filter(r=>r.due_date===selectedDate);
+  const noDateRems = allRem.filter(r=>!r.due_date);
+  if(remFilter==='urgent') dayRems=dayRems.filter(r=>r.tag==='urgent');
+  else if(remFilter==='soon') dayRems=dayRems.filter(r=>r.tag==='soon');
   const hasDay=dayRems.length>0, hasEndless=noDateRems.length>0;
   if(!hasDay && !hasEndless){
     const {text,color}=dayLabel(selectedDate);
@@ -799,29 +964,33 @@ function renderReminders(){
 function renderCatChart(){
   const cats={};
   allTx.filter(t=>t.type==='expense').forEach(t=>{cats[t.category]=(cats[t.category]||0)+t.amount});
-  const labels=Object.keys(cats), data=labels.map(k=>cats[k]);
-  const ctx=document.getElementById('catChart');
+  const labels = Object.keys(cats);
+  const data   = labels.map(k=>cats[k]);
+  const displayLabels = labels.map(k=>`${getCatEmoji(k)} ${k}`);
+  const ctx = document.getElementById('catChart');
   if(catChartInst) catChartInst.destroy();
   catChartInst = new Chart(ctx,{
     type:'doughnut',
-    data:{labels:labels.length?labels:['Нет данных'],datasets:[{data:data.length?data:[1],backgroundColor:labels.length?COLORS.slice(0,labels.length):['#333'],borderWidth:0}]},
+    data:{labels:displayLabels.length?displayLabels:['Нет данных'],datasets:[{data:data.length?data:[1],backgroundColor:labels.length?COLORS.slice(0,labels.length):['#333'],borderWidth:0}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#888',font:{size:11,family:'Onest'},boxWidth:10,padding:8}}}}
   });
 }
 
 function renderInsights(){
-  const inc=allTx.filter(t=>t.type==='income').reduce((a,t)=>a+t.amount,0);
-  const exp=allTx.filter(t=>t.type==='expense').reduce((a,t)=>a+t.amount,0);
+  const inc = allTx.filter(t=>t.type==='income').reduce((a,t)=>a+t.amount,0);
+  const exp = allTx.filter(t=>t.type==='expense').reduce((a,t)=>a+t.amount,0);
+  const saved = allSav.reduce((a,s)=>a+s.current,0);
   const cats={};
   allTx.filter(t=>t.type==='expense').forEach(t=>{cats[t.category]=(cats[t.category]||0)+t.amount});
-  const sorted=Object.entries(cats).sort((a,b)=>b[1]-a[1]);
+  const sorted = Object.entries(cats).sort((a,b)=>b[1]-a[1]);
   const ins=[];
   if(sorted.length) ins.push({i:'📊',t:`Больше всего трат на <strong>${sorted[0][0]}</strong> — ${fmt(sorted[0][1])}`});
   if(inc>0){
     const pct=Math.round(exp/inc*100);
     if(pct>90) ins.push({i:'⚠️',t:`Расходы <strong>${pct}%</strong> от доходов. Высоковато!`});
-    else if(pct<70) ins.push({i:'✅',t:`Свободных <strong>${fmt(inc-exp)}</strong> — пополни накопления!`});
+    else if(pct<70) ins.push({i:'✅',t:`Хороший баланс — тратишь ${pct}% доходов`});
   }
+  if(saved>0) ins.push({i:'🎯',t:`В накоплениях <strong>${fmt(saved)}</strong>`});
   if(!ins.length) ins.push({i:'💡',t:'Добавь транзакции, чтобы увидеть советы.'});
   document.getElementById('insights').innerHTML = ins.map(x=>`
     <div style="display:flex;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--border)">
@@ -830,208 +999,7 @@ function renderInsights(){
     </div>`).join('');
 }
 
-// --- Joint tab ---
-async function loadJoint(){
-  if(!currentUser) return;
-  const invEl = document.getElementById('my-invite-code');
-  if(invEl) invEl.textContent = currentUser.invite_code;
-  try {
-    const data = await apiFetch('GET',`/api/joint?user_id=${currentUser.id}`);
-    renderJoint(data);
-  } catch(e){ toast('Ошибка загрузки'); }
-}
-
-async function joinGroup(){
-  const code = document.getElementById('invite-input').value.trim().toUpperCase();
-  if(code.length !== 6){ toast('Введи 6-значный код'); return; }
-  try{
-    const res = await apiFetch('POST',`/api/groups/join?user_id=${currentUser.id}`,{invite_code: code});
-    document.getElementById('invite-input').value='';
-    toast(`Добавлен: ${res.partner.name}!`);
-    loadJoint();
-  }catch(e){
-    const msg = e.message.includes('404') ? 'Код не найден' : e.message.includes('409') ? 'Уже в группе' : 'Ошибка';
-    toast(msg);
-  }
-}
-
-function copyInvite(){
-  navigator.clipboard.writeText(currentUser.invite_code).then(()=>toast('Код скопирован!'));
-}
-
-function renderJoint(data){
-  const headerEl = document.getElementById('joint-header');
-  const profilesEl = document.getElementById('joint-profiles');
-  const chartWrap = document.getElementById('joint-chart-wrap');
-
-  if(!data.length){
-    headerEl.innerHTML='';
-    profilesEl.innerHTML='<div class="empty">Добавь друга по коду приглашения выше</div>';
-    if(chartWrap) chartWrap.style.display='none';
-    return;
-  }
-
-  const totalInc = data.reduce((a,d)=>a+d.income,0);
-  const totalExp = data.reduce((a,d)=>a+d.expense,0);
-  const totalBal = totalInc - totalExp;
-  const totalSaved = data.reduce((a,d)=>a+d.saved,0);
-
-  headerEl.innerHTML = `
-    <div class="joint-header">
-      <div class="joint-total-label">Общий баланс</div>
-      <div class="joint-total" style="color:${totalBal>=0?'var(--green)':'var(--red)'}">${fmt(Math.abs(totalBal))}</div>
-      <div class="joint-row">
-        <div class="joint-stat"><div class="joint-stat-l">Доходы</div><div class="joint-stat-v" style="color:var(--green)">${fmt(totalInc)}</div></div>
-        <div class="joint-stat"><div class="joint-stat-l">Расходы</div><div class="joint-stat-v" style="color:var(--red)">${fmt(totalExp)}</div></div>
-        <div class="joint-stat"><div class="joint-stat-l">Накоплено</div><div class="joint-stat-v" style="color:var(--amber)">${fmt(totalSaved)}</div></div>
-      </div>
-    </div>`;
-
-  profilesEl.innerHTML = data.map(d=>{
-    const c = d.profile.color;
-    const isMe = d.profile.id === currentUser.id;
-    return `<div class="profile-section">
-      <div class="profile-section-header" style="justify-content:space-between">
-        <div style="display:flex;align-items:center;gap:8px">
-          <div class="ps-dot" style="background:${c}"></div>
-          <div class="ps-name">${d.profile.name}${isMe?' (я)':''}</div>
-        </div>
-      </div>
-      <div class="ps-stats">
-        <div class="ps-stat"><div class="ps-stat-l">Доходы</div><div class="ps-stat-v" style="color:var(--green)">${fmt(d.income)}</div></div>
-        <div class="ps-stat"><div class="ps-stat-l">Расходы</div><div class="ps-stat-v" style="color:var(--red)">${fmt(d.expense)}</div></div>
-        <div class="ps-stat"><div class="ps-stat-l">Баланс</div><div class="ps-stat-v" style="color:${d.balance>=0?'var(--blue)':'var(--red)'}">${fmt(d.balance)}</div></div>
-        <div class="ps-stat"><div class="ps-stat-l">Накоплено</div><div class="ps-stat-v" style="color:var(--amber)">${fmt(d.saved)}</div></div>
-      </div>
-      ${d.recent_tx.length?`<div class="ps-tx-mini">${d.recent_tx.map(t=>`
-        <div class="ps-tx-item">
-          <div class="tx-dot ${t.type==='income'?'dot-g':'dot-r'}" style="width:6px;height:6px;border-radius:50%;flex-shrink:0"></div>
-          <span style="flex:1;color:var(--text)">${t.name}</span>
-          <span style="color:var(--muted)">${t.category}</span>
-          <span style="font-weight:600;margin-left:8px;color:${t.type==='income'?'var(--green)':'var(--red)'}">${t.type==='income'?'+':'-'}${fmt(t.amount)}</span>
-        </div>`).join('')}</div>`:''}
-    </div>`;
-  }).join('');
-
-  if(chartWrap) chartWrap.style.display='block';
-  const allCats = [...new Set(data.flatMap(d=>Object.keys(d.by_category)))];
-  const ctx = document.getElementById('jointChart');
-  if(jointChartInst) jointChartInst.destroy();
-  if(allCats.length){
-    jointChartInst = new Chart(ctx, {
-      type:'bar',
-      data:{
-        labels: allCats,
-        datasets: data.map(d=>({
-          label: d.profile.name,
-          data: allCats.map(c=>Math.round(d.by_category[c]||0)),
-          backgroundColor: d.profile.color + 'bb',
-          borderRadius: 4
-        }))
-      },
-      options:{
-        responsive:true, maintainAspectRatio:false,
-        plugins:{legend:{position:'top',labels:{color:'#888',font:{size:11,family:'Onest'},boxWidth:10,padding:8}}},
-        scales:{x:{ticks:{color:'#666',font:{size:10}},grid:{color:'rgba(255,255,255,.05)'}},y:{ticks:{color:'#666',font:{size:10},callback:v=>v>=1000?Math.round(v/1000)+'к':v},grid:{color:'rgba(255,255,255,.05)'}}}
-      }
-    });
-  }
-}
-
-// --- Actions ---
-function setType(t){
-  txType=t;
-  document.getElementById('pill-exp').className='type-pill'+(t==='expense'?' pill-exp':'');
-  document.getElementById('pill-inc').className='type-pill'+(t==='income'?' pill-inc':'');
-}
-
-async function addTransaction(){
-  const name=document.getElementById('qa-name').value.trim();
-  const amt=parseFloat(document.getElementById('qa-amt').value);
-  const cat=document.getElementById('qa-cat').value;
-  if(!name||!amt||amt<=0){toast('Заполни название и сумму');return;}
-  const tx = await apiFetch('POST',`/api/transactions?user_id=${currentUser.id}`,{name,amount:amt,category:cat,type:txType});
-  allTx.unshift(tx);
-  document.getElementById('qa-name').value='';
-  document.getElementById('qa-amt').value='';
-  renderAll(); toast('Добавлено!');
-}
-
-async function delTx(id){
-  await apiFetch('DELETE',`/api/transactions/${id}`);
-  allTx=allTx.filter(t=>t.id!==id); renderAll();
-}
-
-async function addSaving(){
-  const name=document.getElementById('ns-name').value.trim();
-  const target=parseFloat(document.getElementById('ns-target').value);
-  const current=parseFloat(document.getElementById('ns-current').value)||0;
-  if(!name||!target){toast('Заполни название и сумму');return;}
-  const s=await apiFetch('POST',`/api/savings?user_id=${currentUser.id}`,{name,target,current});
-  allSav.push(s);
-  document.getElementById('ns-name').value='';
-  document.getElementById('ns-target').value='';
-  document.getElementById('ns-current').value='';
-  renderSavings(); toast('Цель создана!');
-}
-
-async function addToSav(id){
-  const amt=parseFloat(document.getElementById(`sav-${id}`).value);
-  if(!amt||amt<=0){toast('Введи сумму');return;}
-  const res=await apiFetch('PATCH',`/api/savings/${id}/add`,{amount:amt});
-  const s=allSav.find(x=>x.id===id); if(s) s.current=res.current;
-  renderSavings(); toast('Пополнено!');
-}
-
-async function delSav(id){
-  await apiFetch('DELETE',`/api/savings/${id}`);
-  allSav=allSav.filter(s=>s.id!==id); renderSavings();
-}
-
-let remFilter = 'all';
-let isEndlessMode = false;
-let selectedDate = new Date().toISOString().slice(0,10);
-let weekOffset = 0;
-
-function setEndlessMode(val){
-  isEndlessMode = val;
-  const btnDate = document.getElementById('btn-with-date');
-  const btnEndless = document.getElementById('btn-endless');
-  const dateInp = document.getElementById('rem-date');
-  if(val){
-    btnEndless.style.background='rgba(74,222,128,.1)';
-    btnEndless.style.border='1.5px solid #4ade80';
-    btnEndless.style.color='#4ade80';
-    btnDate.style.background='var(--bg3)';
-    btnDate.style.border='0.5px solid var(--border2)';
-    btnDate.style.color='var(--muted2)';
-    dateInp.value='';
-    dateInp.disabled=true;
-    dateInp.style.opacity='0.3';
-  } else {
-    btnDate.style.background='var(--text)';
-    btnDate.style.border='none';
-    btnDate.style.color='var(--bg)';
-    btnEndless.style.background='var(--bg3)';
-    btnEndless.style.border='0.5px solid var(--border2)';
-    btnEndless.style.color='var(--muted2)';
-    dateInp.disabled=false;
-    dateInp.style.opacity='1';
-    dateInp.value=selectedDate;
-  }
-}
-
-function setRemFilter(f){
-  remFilter=f;
-  ['all','urgent','soon','endless'].forEach(x=>{
-    const el=document.getElementById(`rf-${x}`);
-    if(!el) return;
-    if(x===f){ el.style.background='rgba(74,222,128,.1)';el.style.border='1.5px solid #4ade80';el.style.color='#4ade80'; }
-    else { el.style.background='var(--bg2)';el.style.border='0.5px solid var(--border)';el.style.color='var(--muted)'; }
-  });
-  renderReminders();
-}
-
+// --- Week planner ---
 function renderWeekPlanner(){
   const today=new Date();
   const todayS=today.toISOString().slice(0,10);
@@ -1057,10 +1025,10 @@ function renderWeekPlanner(){
       return `<div style="width:4px;height:4px;border-radius:50%;background:${c}"></div>`;
     }).join('');
     const emptyDot=`<div style="width:16px;height:2px;border-radius:1px;background:#2a2a2a;margin-top:1px"></div>`;
-    let bg='#181818', border='0.5px solid rgba(255,255,255,.06)', col='#f0f0f0', namecol='#555';
-    if(isSelected && isToday){ bg='#0d1f0d'; border='1.5px solid #4ade80'; col='#4ade80'; namecol='#4ade80'; }
-    else if(isSelected){ bg='#1a1a2e'; border='1.5px solid #60a5fa'; col='#60a5fa'; namecol='#60a5fa'; }
-    else if(isToday){ bg='#141414'; border='1px solid rgba(74,222,128,.3)'; col='#4ade80'; namecol='#4ade80'; }
+    let bg='#181818',border='0.5px solid rgba(255,255,255,.06)',col='#f0f0f0',namecol='#555';
+    if(isSelected&&isToday){bg='#0d1f0d';border='1.5px solid #4ade80';col='#4ade80';namecol='#4ade80';}
+    else if(isSelected){bg='#1a1a2e';border='1.5px solid #60a5fa';col='#60a5fa';namecol='#60a5fa';}
+    else if(isToday){bg='#141414';border='1px solid rgba(74,222,128,.3)';col='#4ade80';namecol='#4ade80';}
     html+=`<div onclick="setWeekDay('${ds}')" style="background:${bg};border-radius:10px;padding:8px 4px 7px;text-align:center;border:${border};cursor:pointer">
       <div style="font-size:9px;color:${namecol};margin-bottom:3px">${days[i]}</div>
       <div style="font-size:15px;font-weight:600;color:${col};margin-bottom:3px">${d.getDate()}</div>
@@ -1070,191 +1038,542 @@ function renderWeekPlanner(){
   }
   grid.innerHTML=html;
 }
-
 function setWeekDay(ds){
   selectedDate=ds;
-  if(!isEndlessMode){
-    const el=document.getElementById('rem-date');
-    if(el) el.value=ds;
-  }
+  if(!isEndlessMode){ const el=document.getElementById('rem-date'); if(el) el.value=ds; }
   renderReminders();
+}
+
+// --- Joint tab ---
+async function loadJoint(){
+  if(!currentUser) return;
+  const invEl = document.getElementById('my-invite-code');
+  if(invEl) invEl.textContent = currentUser.invite_code;
+  try{
+    const data = await apiFetch('GET',`/api/joint?user_id=${currentUser.id}`);
+    renderJoint(data);
+  }catch(e){ toast('Ошибка загрузки'); }
+}
+async function joinGroup(){
+  const code = document.getElementById('invite-input').value.trim().toUpperCase();
+  if(code.length!==6){ toast('Введи 6-значный код'); return; }
+  haptic();
+  try{
+    const res = await apiFetch('POST',`/api/groups/join?user_id=${currentUser.id}`,{invite_code:code});
+    document.getElementById('invite-input').value='';
+    toast(`Добавлен: ${res.partner.name}!`);
+    loadJoint();
+  }catch(e){
+    const msg=e.message.includes('404')?'Код не найден':e.message.includes('409')?'Уже в группе':'Ошибка';
+    toast(msg);
+  }
+}
+function copyInvite(){ navigator.clipboard.writeText(currentUser.invite_code).then(()=>toast('Код скопирован!')); }
+function renderJoint(data){
+  const headerEl=document.getElementById('joint-header');
+  const profilesEl=document.getElementById('joint-profiles');
+  const chartWrap=document.getElementById('joint-chart-wrap');
+  if(!data.length){
+    headerEl.innerHTML='';
+    profilesEl.innerHTML='<div class="empty">Добавь друга по коду приглашения выше</div>';
+    if(chartWrap) chartWrap.style.display='none';
+    return;
+  }
+  const totalInc=data.reduce((a,d)=>a+d.income,0);
+  const totalExp=data.reduce((a,d)=>a+d.expense,0);
+  const totalBal=totalInc-totalExp;
+  const totalSaved=data.reduce((a,d)=>a+d.saved,0);
+  headerEl.innerHTML=`<div class="joint-header">
+    <div class="joint-total-label">Общий баланс</div>
+    <div class="joint-total" style="color:${totalBal>=0?'var(--green)':'var(--red)'}">${fmt(Math.abs(totalBal))}</div>
+    <div class="joint-row">
+      <div class="joint-stat"><div class="joint-stat-l">Доходы</div><div class="joint-stat-v" style="color:var(--green)">${fmt(totalInc)}</div></div>
+      <div class="joint-stat"><div class="joint-stat-l">Расходы</div><div class="joint-stat-v" style="color:var(--red)">${fmt(totalExp)}</div></div>
+      <div class="joint-stat"><div class="joint-stat-l">Накоплено</div><div class="joint-stat-v" style="color:var(--amber)">${fmt(totalSaved)}</div></div>
+    </div>
+  </div>`;
+  profilesEl.innerHTML=data.map(d=>{
+    const c=d.profile.color;
+    const isMe=d.profile.id===currentUser.id;
+    return `<div class="profile-section">
+      <div class="profile-section-header" style="justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="ps-dot" style="background:${c}"></div>
+          <div class="ps-name">${escHtml(d.profile.name)}${isMe?' (я)':''}</div>
+        </div>
+      </div>
+      <div class="ps-stats">
+        <div class="ps-stat"><div class="ps-stat-l">Доходы</div><div class="ps-stat-v" style="color:var(--green)">${fmt(d.income)}</div></div>
+        <div class="ps-stat"><div class="ps-stat-l">Расходы</div><div class="ps-stat-v" style="color:var(--red)">${fmt(d.expense)}</div></div>
+        <div class="ps-stat"><div class="ps-stat-l">Баланс</div><div class="ps-stat-v" style="color:${d.balance>=0?'var(--blue)':'var(--red)'}">${fmt(d.balance)}</div></div>
+        <div class="ps-stat"><div class="ps-stat-l">Накоплено</div><div class="ps-stat-v" style="color:var(--amber)">${fmt(d.saved)}</div></div>
+      </div>
+      ${d.recent_tx.length?`<div class="ps-tx-mini">${d.recent_tx.map(t=>`
+        <div class="ps-tx-item">
+          <div class="tx-dot ${t.type==='income'?'dot-g':'dot-r'}" style="width:6px;height:6px;border-radius:50%;flex-shrink:0"></div>
+          <span style="flex:1;color:var(--text)">${escHtml(t.name)}</span>
+          <span style="color:var(--muted)">${getCatEmoji(t.category)} ${escHtml(t.category)}</span>
+          <span style="font-weight:600;margin-left:8px;color:${t.type==='income'?'var(--green)':'var(--red)'}">${t.type==='income'?'+':'-'}${fmt(t.amount)}</span>
+        </div>`).join('')}</div>`:''}
+    </div>`;
+  }).join('');
+  if(chartWrap) chartWrap.style.display='block';
+  const allCatNames=[...new Set(data.flatMap(d=>Object.keys(d.by_category)))];
+  const ctx=document.getElementById('jointChart');
+  if(jointChartInst) jointChartInst.destroy();
+  if(allCatNames.length){
+    jointChartInst=new Chart(ctx,{
+      type:'bar',
+      data:{
+        labels:allCatNames.map(n=>`${getCatEmoji(n)} ${n}`),
+        datasets:data.map(d=>({
+          label:d.profile.name,
+          data:allCatNames.map(c=>Math.round(d.by_category[c]||0)),
+          backgroundColor:d.profile.color+'bb',
+          borderRadius:4
+        }))
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{position:'top',labels:{color:'#888',font:{size:11,family:'Onest'},boxWidth:10,padding:8}}},
+        scales:{
+          x:{ticks:{color:'#666',font:{size:10}},grid:{color:'rgba(255,255,255,.05)'}},
+          y:{ticks:{color:'#666',font:{size:10},callback:v=>v>=1000?Math.round(v/1000)+'к':v},grid:{color:'rgba(255,255,255,.05)'}}
+        }
+      }
+    });
+  }
+}
+
+// --- Actions ---
+function setType(t){
+  txType=t;
+  document.getElementById('pill-exp').className='type-pill'+(t==='expense'?' pill-exp':'');
+  document.getElementById('pill-inc').className='type-pill'+(t==='income'?' pill-inc':'');
+}
+
+async function addTransaction(){
+  const name=document.getElementById('qa-name').value.trim();
+  const amt=parseFloat(document.getElementById('qa-amt').value);
+  const cat=document.getElementById('qa-cat').value;
+  if(!name||!amt||amt<=0){ toast('Заполни название и сумму'); return; }
+  haptic();
+  try{
+    const tx=await apiFetch('POST',`/api/transactions?user_id=${currentUser.id}`,{name,amount:amt,category:cat,type:txType});
+    allTx.unshift(tx);
+    document.getElementById('qa-name').value='';
+    document.getElementById('qa-amt').value='';
+    renderAll(); toast('Добавлено!');
+  }catch(e){ toast('Ошибка'); }
+}
+
+async function delTx(id){
+  haptic();
+  const tx=allTx.find(t=>t.id===id);
+  if(!tx) return;
+  allTx=allTx.filter(t=>t.id!==id);
+  renderAll();
+  showUndoToast(`Удалено: ${tx.name}`,
+    ()=>{ allTx.unshift(tx); allTx.sort((a,b)=>b.created_at.localeCompare(a.created_at)); renderAll(); },
+    ()=>apiFetch('DELETE',`/api/transactions/${id}?user_id=${currentUser.id}`)
+  );
+}
+
+async function addSaving(){
+  const name=document.getElementById('ns-name').value.trim();
+  const target=parseFloat(document.getElementById('ns-target').value);
+  const current=parseFloat(document.getElementById('ns-current').value)||0;
+  if(!name||!target||target<=0){ toast('Заполни название и сумму'); return; }
+  haptic();
+  try{
+    const s=await apiFetch('POST',`/api/savings?user_id=${currentUser.id}`,{name,target,current,color:newSavColor});
+    allSav.push(s);
+    document.getElementById('ns-name').value='';
+    document.getElementById('ns-target').value='';
+    document.getElementById('ns-current').value='';
+    renderSavings(); renderHeader(); toast('Цель создана!');
+  }catch(e){ toast('Ошибка'); }
+}
+
+async function addToSav(id){
+  const amt=parseFloat(document.getElementById(`sav-${id}`).value);
+  if(!amt||amt<=0){ toast('Введи сумму'); return; }
+  haptic();
+  try{
+    const res=await apiFetch('PATCH',`/api/savings/${id}/add?user_id=${currentUser.id}`,{amount:amt});
+    const s=allSav.find(x=>x.id===id); if(s) s.current=res.current;
+    renderSavings(); renderHeader(); toast('Пополнено!');
+  }catch(e){ toast('Ошибка'); }
+}
+
+async function delSav(id){
+  haptic();
+  const sav=allSav.find(s=>s.id===id);
+  if(!sav) return;
+  allSav=allSav.filter(s=>s.id!==id);
+  renderSavings(); renderHeader();
+  showUndoToast(`Удалено: ${sav.name}`,
+    ()=>{ allSav.push(sav); allSav.sort((a,b)=>a.created_at.localeCompare(b.created_at)); renderSavings(); renderHeader(); },
+    ()=>apiFetch('DELETE',`/api/savings/${id}?user_id=${currentUser.id}`)
+  );
 }
 
 async function addReminder(endless=false){
   const text=document.getElementById('rem-inp').value.trim();
   const tag=document.getElementById('rem-tag').value;
   const date=document.getElementById('rem-date').value;
-  console.log('CREATE',{endless,date});
-  if(!text){toast('Введи текст');return;}
-  if(!currentUser){toast('Профиль не выбран');return;}
-  if(!endless&&!date){toast('Выбери дату');return;}
-  const payload={text,tag,...(endless?{}:{due_date:date})};
-  console.log('PAYLOAD',payload);
+  if(!text){ toast('Введи текст'); return; }
+  if(!currentUser){ toast('Профиль не выбран'); return; }
+  if(!endless&&!date){ toast('Выбери дату'); return; }
+  haptic();
   try{
+    const payload={text,tag,...(endless?{}:{due_date:date})};
     const r=await apiFetch('POST',`/api/reminders?user_id=${currentUser.id}`,payload);
     allRem.unshift(r);
     document.getElementById('rem-inp').value='';
     renderReminders(); toast('Добавлено!');
-  }catch(e){
-    console.error('addReminder error',e);
-    toast('Ошибка при создании');
-  }
+  }catch(e){ toast('Ошибка при создании'); }
 }
 
 async function toggleRem(id,done){
-  await apiFetch('PATCH',`/api/reminders/${id}`,{done});
-  const r=allRem.find(x=>x.id===id); if(r) r.done=done; renderReminders();
+  haptic(3);
+  try{
+    await apiFetch('PATCH',`/api/reminders/${id}?user_id=${currentUser.id}`,{done});
+    const r=allRem.find(x=>x.id===id); if(r) r.done=done; renderReminders();
+  }catch(e){ toast('Ошибка'); }
 }
 
 async function delRem(id){
-  await apiFetch('DELETE',`/api/reminders/${id}`);
-  allRem=allRem.filter(r=>r.id!==id); renderReminders();
+  haptic();
+  const rem=allRem.find(r=>r.id===id);
+  if(!rem) return;
+  allRem=allRem.filter(r=>r.id!==id);
+  renderReminders();
+  showUndoToast(`Удалено: ${rem.text.slice(0,30)}`,
+    ()=>{ allRem.unshift(rem); renderReminders(); },
+    ()=>apiFetch('DELETE',`/api/reminders/${id}?user_id=${currentUser.id}`)
+  );
 }
 
-function switchTab(tab){
-  ['home','history','savings','reminders','joint'].forEach(t=>{
-    document.getElementById(`sec-${t}`).classList.toggle('active',t===tab);
-    document.getElementById(`nav-${t}`).classList.toggle('active',t===tab);
+function setEndlessMode(val){
+  isEndlessMode=val;
+  const btnDate=document.getElementById('btn-with-date');
+  const btnEndless=document.getElementById('btn-endless');
+  const dateInp=document.getElementById('rem-date');
+  if(val){
+    btnEndless.style.cssText='flex:1;padding:12px;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;border:1.5px solid #4ade80;background:rgba(74,222,128,.1);color:#4ade80;font-family:inherit';
+    btnDate.style.cssText='flex:1;padding:12px;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;border:0.5px solid var(--border2);background:var(--bg3);color:var(--muted2);font-family:inherit';
+    dateInp.value=''; dateInp.disabled=true; dateInp.style.opacity='0.3';
+  }else{
+    btnDate.style.cssText='flex:1;padding:12px;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;border:none;background:var(--text);color:var(--bg);font-family:inherit';
+    btnEndless.style.cssText='flex:1;padding:12px;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;border:0.5px solid var(--border2);background:var(--bg3);color:var(--muted2);font-family:inherit';
+    dateInp.disabled=false; dateInp.style.opacity='1'; dateInp.value=selectedDate;
+  }
+}
+function setRemFilter(f){
+  remFilter=f;
+  ['all','urgent','soon','endless'].forEach(x=>{
+    const el=document.getElementById(`rf-${x}`);
+    if(!el) return;
+    if(x===f){ el.style.background='rgba(74,222,128,.1)';el.style.border='1.5px solid #4ade80';el.style.color='#4ade80'; }
+    else{ el.style.background='var(--bg2)';el.style.border='0.5px solid var(--border)';el.style.color='var(--muted)'; }
   });
-  if(tab==='joint') loadJoint();
-  if(tab==='reminders') renderReminders();
+  renderReminders();
 }
 
-// --- Push notifications ---
-async function registerPush(){
-  if(!('serviceWorker' in navigator) || !('PushManager' in window)) return;
-  try {
-    const reg = await navigator.serviceWorker.ready;
-    const existing = await reg.pushManager.getSubscription();
-    if(existing){ await sendSubToServer(existing); return; }
-    const res = await apiFetch('GET', '/api/push/vapid-public');
-    const key = urlBase64ToUint8Array(res.key);
-    const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
-    await sendSubToServer(sub);
-    toast('Уведомления включены!');
-  } catch(e){ console.log('Push error:', e); }
+// --- Categories modal ---
+function openCatsModal(){
+  renderCatsModal();
+  document.getElementById('cats-modal').classList.remove('hidden');
+}
+function closeCatsModal(){ document.getElementById('cats-modal').classList.add('hidden'); }
+
+function renderCatsModal(){
+  const defEl=document.getElementById('default-cats-list');
+  defEl.innerHTML=DEFAULT_CATEGORIES.map(c=>`
+    <div class="cat-row">
+      <span class="cat-emoji">${c.emoji}</span>
+      <span class="cat-name">${escHtml(c.name)}</span>
+      <span class="cat-badge">стандарт</span>
+    </div>
+  `).join('');
+  const custEl=document.getElementById('custom-cats-list');
+  if(!allCats.length){
+    custEl.innerHTML='<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">Нет кастомных категорий</div>';
+    return;
+  }
+  custEl.innerHTML=allCats.map(c=>`
+    <div class="cat-row" id="cat-row-${c.id}">
+      <span class="cat-emoji">${c.emoji}</span>
+      <span class="cat-name">${escHtml(c.name)}</span>
+      <button class="cat-edit-btn" onclick="startEditCat('${c.id}')">✎</button>
+      <button class="cat-del-btn" onclick="delCategory('${c.id}')">×</button>
+    </div>
+  `).join('');
 }
 
-async function sendSubToServer(sub){
-  if(!currentUser) return;
-  await apiFetch('POST', `/api/push/subscribe?user_id=${currentUser.id}`, { subscription: sub.toJSON() });
+function startEditCat(id){
+  const cat=allCats.find(c=>c.id===id);
+  if(!cat) return;
+  const row=document.getElementById(`cat-row-${id}`);
+  row.innerHTML=`
+    <input id="edit-emoji-${id}" value="${cat.emoji}" maxlength="4" style="width:44px;background:var(--bg2);border:0.5px solid var(--border2);border-radius:7px;padding:6px 4px;color:var(--text);font-size:18px;text-align:center;font-family:inherit;outline:none;flex-shrink:0" />
+    <input id="edit-name-${id}" value="${escHtml(cat.name)}" maxlength="24" style="flex:1;background:var(--bg2);border:0.5px solid var(--border2);border-radius:7px;padding:6px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none" />
+    <button onclick="saveEditCat('${id}')" style="padding:6px 10px;border-radius:7px;background:var(--green);color:#000;border:none;font-size:12px;font-weight:600;cursor:pointer">✓</button>
+    <button onclick="renderCatsModal()" style="padding:6px 8px;border-radius:7px;background:var(--bg4);color:var(--muted);border:none;font-size:14px;cursor:pointer">✕</button>
+  `;
+  document.getElementById(`edit-name-${id}`).focus();
 }
 
-async function testPush(){
-  await apiFetch('POST', `/api/push/test?user_id=${currentUser.id}`);
-  toast('Тестовое уведомление отправлено!');
+async function saveEditCat(id){
+  const emoji=document.getElementById(`edit-emoji-${id}`).value.trim()||'📦';
+  const name=document.getElementById(`edit-name-${id}`).value.trim();
+  if(!name){ toast('Введи название'); return; }
+  haptic();
+  try{
+    const res=await apiFetch('PATCH',`/api/categories/${id}?user_id=${currentUser.id}`,{name,emoji});
+    const cat=allCats.find(c=>c.id===id);
+    if(cat){ cat.name=res.name; cat.emoji=res.emoji; }
+    renderCatsModal(); renderCategorySelects(); toast('Сохранено!');
+  }catch(e){ toast('Ошибка'); }
 }
 
-function urlBase64ToUint8Array(base64String){
-  const padding = '='.repeat((4 - base64String.length % 4) % 4);
-  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-  const raw = window.atob(base64);
-  return new Uint8Array([...raw].map(c => c.charCodeAt(0)));
+async function addCategory(){
+  const emoji=document.getElementById('new-cat-emoji').value.trim()||'📦';
+  const name=document.getElementById('new-cat-name').value.trim();
+  if(!name){ toast('Введи название'); return; }
+  haptic();
+  try{
+    const cat=await apiFetch('POST',`/api/categories?user_id=${currentUser.id}`,{name,emoji});
+    allCats.push(cat);
+    document.getElementById('new-cat-emoji').value='';
+    document.getElementById('new-cat-name').value='';
+    renderCatsModal(); renderCategorySelects(); toast('Категория добавлена!');
+  }catch(e){ toast('Ошибка'); }
 }
 
-async function requestPushPermission(){
-  const perm = await Notification.requestPermission();
-  if(perm === 'granted'){ await registerPush(); }
-  else { toast('Уведомления отклонены'); }
+async function delCategory(id){
+  haptic();
+  const cat=allCats.find(c=>c.id===id);
+  allCats=allCats.filter(c=>c.id!==id);
+  renderCatsModal(); renderCategorySelects();
+  try{ await apiFetch('DELETE',`/api/categories/${id}?user_id=${currentUser.id}`); }
+  catch(e){ if(cat) allCats.push(cat); renderCatsModal(); renderCategorySelects(); toast('Ошибка'); }
 }
 
-// --- Change PIN ---
-let cpOld = '', cpNew = '', cpStep = 'old';
+// --- Settings modal ---
+function openSettingsModal(){ document.getElementById('settings-modal').classList.remove('hidden'); }
+function hideSettingsModal(){ document.getElementById('settings-modal').classList.add('hidden'); }
 
+// --- Account deletion ---
+let dcVal='';
+function confirmDeleteAccount(){
+  dcVal=''; updateDcDots();
+  document.getElementById('dc-error').textContent='';
+  document.getElementById('confirm-delete-modal').style.display='flex';
+}
+function hideConfirmDeleteModal(){ document.getElementById('confirm-delete-modal').style.display='none'; dcVal=''; }
+function updateDcDots(){
+  for(let i=0;i<4;i++){
+    const d=document.getElementById(`dc${i}`);
+    d.classList.toggle('filled',i<dcVal.length);
+    d.classList.remove('error');
+  }
+}
+function dcPress(d){ if(dcVal.length>=4) return; dcVal+=d; updateDcDots(); if(dcVal.length===4) setTimeout(doDeleteAccount,100); }
+function dcDel(){ dcVal=dcVal.slice(0,-1); updateDcDots(); document.getElementById('dc-error').textContent=''; }
+
+async function doDeleteAccount(){
+  try{
+    // Verify PIN by attempting login first
+    await apiFetch('POST','/api/auth/login',{pin:dcVal});
+    // PIN correct — delete account
+    await apiFetch('DELETE',`/api/auth/account?user_id=${currentUser.id}`);
+    hideConfirmDeleteModal();
+    localStorage.removeItem('user_id');
+    currentUser=null;
+    document.getElementById('main-app').style.display='none';
+    document.getElementById('pin-screen').classList.remove('hidden');
+    showRegister();
+    toast('Аккаунт удалён');
+  }catch(e){
+    document.getElementById('dc-error').textContent='Неверный PIN';
+    for(let i=0;i<4;i++) document.getElementById(`dc${i}`).classList.add('error');
+    setTimeout(()=>{ dcVal=''; updateDcDots(); },600);
+  }
+}
+
+// --- Change PIN modal ---
+let cpOld='', cpNew='', cpStep='old';
 function showChangePinModal(){
   cpOld=''; cpNew=''; cpStep='old';
   updateCpDots();
   document.getElementById('cp-error').textContent='';
-  const m = document.getElementById('pin-change-modal');
-  m.style.display='flex';
+  document.getElementById('pin-change-modal').style.display='flex';
 }
-
-function hideChangePinModal(){
-  document.getElementById('pin-change-modal').style.display='none';
-}
-
+function hideChangePinModal(){ document.getElementById('pin-change-modal').style.display='none'; }
 function updateCpDots(){
   for(let i=0;i<4;i++){
     document.getElementById(`co${i}`).className='pin-dot'+(i<cpOld.length?' filled':'');
     document.getElementById(`cn${i}`).className='pin-dot'+(i<cpNew.length?' filled':'');
   }
 }
-
 function cpPress(d){
   if(cpStep==='old'){
     if(cpOld.length>=4) return;
     cpOld+=d; updateCpDots();
     if(cpOld.length===4){ cpStep='new'; document.getElementById('cp-error').textContent='Теперь введи новый PIN'; }
-  } else {
+  }else{
     if(cpNew.length>=4) return;
     cpNew+=d; updateCpDots();
-    if(cpNew.length===4) setTimeout(doChangePin, 100);
+    if(cpNew.length===4) setTimeout(doChangePin,100);
   }
 }
-
 function cpDel(){
-  if(cpStep==='new' && cpNew.length===0){ cpStep='old'; document.getElementById('cp-error').textContent=''; return; }
-  if(cpStep==='new'){ cpNew=cpNew.slice(0,-1); }
-  else { cpOld=cpOld.slice(0,-1); }
+  if(cpStep==='new'&&cpNew.length===0){ cpStep='old'; document.getElementById('cp-error').textContent=''; return; }
+  if(cpStep==='new') cpNew=cpNew.slice(0,-1); else cpOld=cpOld.slice(0,-1);
   updateCpDots();
 }
-
 async function doChangePin(){
   try{
-    await apiFetch('PATCH',`/api/auth/pin?user_id=${currentUser.id}`,{old_pin:cpOld, new_pin:cpNew});
-    hideChangePinModal();
-    toast('PIN изменён!');
+    await apiFetch('PATCH',`/api/auth/pin?user_id=${currentUser.id}`,{old_pin:cpOld,new_pin:cpNew});
+    hideChangePinModal(); toast('PIN изменён!');
   }catch(e){
-    const msg = e.message.includes('403')?'Неверный текущий PIN':e.message.includes('409')?'Этот PIN уже занят':'Ошибка';
+    const msg=e.message.includes('403')?'Неверный текущий PIN':e.message.includes('409')?'Этот PIN уже занят':'Ошибка';
     document.getElementById('cp-error').textContent=msg;
     cpOld=''; cpNew=''; cpStep='old'; updateCpDots();
   }
 }
 
+// --- Tab switching ---
+const TABS=['home','history','savings','reminders','joint'];
+function switchTab(tab){
+  TABS.forEach(t=>{
+    document.getElementById(`sec-${t}`).classList.toggle('active',t===tab);
+    document.getElementById(`nav-${t}`).classList.toggle('active',t===tab);
+  });
+  if(tab==='joint') loadJoint();
+  if(tab==='reminders') renderReminders();
+  if(tab==='history'){ renderMonthFilter(); renderAllTx(); }
+}
+
+// --- Push notifications ---
+async function registerPush(){
+  if(!('serviceWorker' in navigator)||!('PushManager' in window)) return;
+  try{
+    const reg=await navigator.serviceWorker.ready;
+    const existing=await reg.pushManager.getSubscription();
+    if(existing){ await sendSubToServer(existing); return; }
+    const res=await apiFetch('GET','/api/push/vapid-public');
+    const key=urlBase64ToUint8Array(res.key);
+    const sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:key});
+    await sendSubToServer(sub);
+    toast('Уведомления включены!');
+  }catch(e){}
+}
+async function sendSubToServer(sub){
+  if(!currentUser) return;
+  await apiFetch('POST',`/api/push/subscribe?user_id=${currentUser.id}`,{subscription:sub.toJSON()});
+}
+async function requestPushPermission(){
+  const perm=await Notification.requestPermission();
+  if(perm==='granted') await registerPush();
+  else toast('Уведомления отклонены');
+}
+function urlBase64ToUint8Array(b64){
+  const padding='='.repeat((4-b64.length%4)%4);
+  const base64=(b64+padding).replace(/-/g,'+').replace(/_/g,'/');
+  const raw=window.atob(base64);
+  return new Uint8Array([...raw].map(c=>c.charCodeAt(0)));
+}
+
 // --- Init ---
 renderRegColorRow();
+renderSavColorRow();
 
 async function init(){
-  const savedId = localStorage.getItem('user_id');
+  const savedId=localStorage.getItem('user_id');
   if(savedId){
     try{
-      const user = await apiFetch('GET', `/api/auth/me?user_id=${savedId}`);
-      enterApp(user);
-      return;
-    }catch(e){
-      localStorage.removeItem('user_id');
-    }
+      const user=await apiFetch('GET',`/api/auth/me?user_id=${savedId}`);
+      enterApp(user); return;
+    }catch(e){ localStorage.removeItem('user_id'); }
   }
-  // Show PIN screen
   document.getElementById('pin-screen').classList.remove('hidden');
 }
 
 if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('/static/sw.js').then(reg => {
-    console.log('SW registered');
-  });
+  navigator.serviceWorker.register('/static/sw.js');
 }
 
-document.getElementById('btn-with-date').addEventListener('click', ()=>{ setEndlessMode(false); addReminder(false); });
-document.getElementById('btn-endless').addEventListener('click', ()=>{ setEndlessMode(true); addReminder(true); });
-document.getElementById('rem-date').addEventListener('change', (e)=>{ selectedDate=e.target.value; renderWeekPlanner(); });
+// Event listeners
+document.getElementById('btn-with-date').addEventListener('click',()=>{ setEndlessMode(false); addReminder(false); });
+document.getElementById('btn-endless').addEventListener('click',()=>{ setEndlessMode(true); addReminder(true); });
+document.getElementById('rem-date').addEventListener('change',e=>{ selectedDate=e.target.value; renderWeekPlanner(); });
 
-// Swipe navigation
+// Enter key shortcuts
+document.getElementById('qa-name').addEventListener('keydown',e=>{ if(e.key==='Enter') addTransaction(); });
+document.getElementById('qa-amt').addEventListener('keydown',e=>{ if(e.key==='Enter') addTransaction(); });
+document.getElementById('rem-inp').addEventListener('keydown',e=>{
+  if(e.key==='Enter'){ setEndlessMode(isEndlessMode); addReminder(isEndlessMode); }
+});
+document.getElementById('ns-name').addEventListener('keydown',e=>{ if(e.key==='Enter') addSaving(); });
+document.getElementById('ns-target').addEventListener('keydown',e=>{ if(e.key==='Enter') addSaving(); });
+document.getElementById('new-cat-name').addEventListener('keydown',e=>{ if(e.key==='Enter') addCategory(); });
+document.getElementById('invite-input').addEventListener('keydown',e=>{ if(e.key==='Enter') joinGroup(); });
+
+// Close modals on backdrop tap
+document.getElementById('cats-modal').addEventListener('click',e=>{
+  if(e.target===document.getElementById('cats-modal')) closeCatsModal();
+});
+document.getElementById('settings-modal').addEventListener('click',e=>{
+  if(e.target===document.getElementById('settings-modal')) hideSettingsModal();
+});
+
+// Week planner swipe
 (function(){
-  let tx=0;
+  let wx=0;
   const grid=document.getElementById('week-grid');
-  grid.addEventListener('touchstart', e=>{ tx=e.changedTouches[0].clientX; }, {passive:true});
-  grid.addEventListener('touchend', e=>{
-    const dx=e.changedTouches[0].clientX - tx;
+  grid.addEventListener('touchstart',e=>{ wx=e.changedTouches[0].clientX; },{passive:true});
+  grid.addEventListener('touchend',e=>{
+    const dx=e.changedTouches[0].clientX-wx;
     if(Math.abs(dx)<50) return;
-    weekOffset += dx<0 ? 1 : -1;
-    renderWeekPlanner();
-    renderReminders();
-  }, {passive:true});
+    weekOffset+=dx<0?1:-1;
+    renderWeekPlanner(); renderReminders();
+  },{passive:true});
 })();
 
+// Tab swipe
+(function(){
+  let sx=0, sy=0;
+  const content=document.getElementById('main-content');
+  content.addEventListener('touchstart',e=>{ sx=e.changedTouches[0].clientX; sy=e.changedTouches[0].clientY; },{passive:true});
+  content.addEventListener('touchend',e=>{
+    if(e.target.closest && e.target.closest('#week-grid')) return;
+    const dx=e.changedTouches[0].clientX-sx;
+    const dy=e.changedTouches[0].clientY-sy;
+    if(Math.abs(dx)<60||Math.abs(dy)>Math.abs(dx)*0.7) return;
+    const cur=TABS.findIndex(t=>document.getElementById(`sec-${t}`).classList.contains('active'));
+    const next=dx<0?cur+1:cur-1;
+    if(next>=0&&next<TABS.length){ haptic(5); switchTab(TABS[next]); }
+  },{passive:true});
+})();
+
+// Pull to refresh
+(function(){
+  let py=0, pulling=false;
+  const content=document.getElementById('main-content');
+  content.addEventListener('touchstart',e=>{
+    if(content.scrollTop===0){ py=e.touches[0].clientY; pulling=true; }
+  },{passive:true});
+  content.addEventListener('touchend',e=>{
+    if(!pulling) return; pulling=false;
+    if(e.changedTouches[0].clientY-py>80){ haptic(10); loadAll(); }
+  },{passive:true});
+})();
+
+setInterval(()=>{ if(currentUser) loadAll(); },30000);
 init();
-setInterval(()=>{ if(currentUser) loadAll(); }, 30000);
 </script>
 </body>
 </html>

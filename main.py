@@ -1,19 +1,21 @@
-from fastapi import FastAPI, HTTPException, Depends, Query
+from fastapi import FastAPI, HTTPException, Depends, Query, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional
 import sqlite3, os, uuid, json, hashlib, secrets, string
 from datetime import datetime, date
 
 app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
-DB_PATH = os.environ.get("DB_PATH", "finance.db")
-VAPID_PUBLIC = "BCtzPfkQarb3fX7wcFuDPgBx71iHTHG6JXELXjHlTcXVcoMqZL0hqKOIVWh6E_nhlXzrgJ7GtK5jsJ5Gu_nLVeA"
-VAPID_PRIVATE = "XkiHS7bOcFWOopZK9mbqxDpGuWSiAWXxjPopLf3E17o"
-VAPID_EMAIL = "mailto:z.s.e.r.g.e.i.11.24@gmail.com"
+DB_PATH       = os.environ.get("DB_PATH",       "finance.db")
+VAPID_PUBLIC  = os.environ.get("VAPID_PUBLIC",  "BCtzPfkQarb3fX7wcFuDPgBx71iHTHG6JXELXjHlTcXVcoMqZL0hqKOIVWh6E_nhlXzrgJ7GtK5jsJ5Gu_nLVeA")
+VAPID_PRIVATE = os.environ.get("VAPID_PRIVATE", "XkiHS7bOcFWOopZK9mbqxDpGuWSiAWXxjPopLf3E17o")
+VAPID_EMAIL   = os.environ.get("VAPID_EMAIL",   "mailto:z.s.e.r.g.e.i.11.24@gmail.com")
+CRON_SECRET   = os.environ.get("CRON_SECRET",   "")
+
 
 def get_db():
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
@@ -23,12 +25,15 @@ def get_db():
     finally:
         conn.close()
 
+
 def hash_pin(pin: str) -> str:
     return hashlib.sha256(pin.encode()).hexdigest()
+
 
 def gen_invite() -> str:
     chars = string.ascii_uppercase + string.digits
     return ''.join(secrets.choice(chars) for _ in range(6))
+
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
@@ -68,7 +73,7 @@ def init_db():
             name TEXT NOT NULL,
             target REAL NOT NULL,
             current REAL NOT NULL DEFAULT 0,
-            color TEXT DEFAULT '#185FA5',
+            color TEXT DEFAULT '#60a5fa',
             created_at TEXT NOT NULL
         );
         CREATE TABLE IF NOT EXISTS reminders (
@@ -86,48 +91,43 @@ def init_db():
             subscription TEXT NOT NULL,
             created_at TEXT NOT NULL
         );
+        CREATE TABLE IF NOT EXISTS categories (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL,
+            name TEXT NOT NULL,
+            emoji TEXT NOT NULL DEFAULT '📦',
+            created_at TEXT NOT NULL
+        );
     """)
     conn.commit()
-    # Migration: move profile_id -> user_id if needed
-    KNOWN_PINS = {
-        '2faf44f3-8be1-4d84-89de-ecbf1449eb90': '1111',  # Сергей
-        'd9febcf0-7bab-405f-a235-f7cec2fa2c93': '2222',  # Дарья
-    }
+    # One-time migration: profiles -> users (safe to run repeatedly)
     try:
-        old_profiles = conn.execute("SELECT * FROM profiles LIMIT 1").fetchall()
-        if old_profiles:
-            profiles = conn.execute("SELECT * FROM profiles").fetchall()
-            for p in profiles:
-                old_id = p["id"]
-                name = p["name"]
-                color = p["color"]
-                existing = conn.execute("SELECT id FROM users WHERE id=?", (old_id,)).fetchone()
-                if not existing:
+        if conn.execute("SELECT * FROM profiles LIMIT 1").fetchall():
+            for p in conn.execute("SELECT * FROM profiles").fetchall():
+                if not conn.execute("SELECT id FROM users WHERE id=?", (p["id"],)).fetchone():
                     invite = gen_invite()
                     while conn.execute("SELECT id FROM users WHERE invite_code=?", (invite,)).fetchone():
                         invite = gen_invite()
-                    pin = KNOWN_PINS.get(old_id, '1234')
-                    pin_hash = hash_pin(pin)
-                    conn.execute(
-                        "INSERT INTO users VALUES (?,?,?,?,?,?)",
-                        (old_id, name, pin_hash, color, invite, datetime.now().isoformat())
-                    )
+                    conn.execute("INSERT INTO users VALUES (?,?,?,?,?,?)",
+                        (p["id"], p["name"], hash_pin("1234"), p["color"], invite, datetime.now().isoformat()))
             conn.commit()
-            # Migrate transactions
-            for table, col in [("transactions","profile_id"),("savings","profile_id"),("reminders","profile_id"),("push_subscriptions","profile_id")]:
+            for table, col in [("transactions", "profile_id"), ("savings", "profile_id"),
+                                ("reminders", "profile_id"), ("push_subscriptions", "profile_id")]:
                 try:
-                    rows = conn.execute(f"SELECT * FROM {table}").fetchall()
+                    rows = conn.execute(f"SELECT * FROM {table} LIMIT 1").fetchall()
                     if rows and col in rows[0].keys():
                         conn.execute(f"ALTER TABLE {table} ADD COLUMN user_id TEXT")
-                        conn.execute(f"UPDATE {table} SET user_id = {col}")
+                        conn.execute(f"UPDATE {table} SET user_id = profile_id")
                         conn.commit()
-                except:
+                except Exception:
                     pass
-    except Exception as e:
+    except Exception:
         pass
     conn.close()
 
+
 init_db()
+
 
 # --- Models ---
 class RegisterBody(BaseModel):
@@ -143,12 +143,13 @@ class Transaction(BaseModel):
     amount: float
     category: str
     type: str
+    date: Optional[str] = None  # DD.MM, falls back to today if omitted
 
 class Saving(BaseModel):
     name: str
     target: float
     current: float = 0
-    color: str = "#185FA5"
+    color: str = "#60a5fa"
 
 class SavingAdd(BaseModel):
     amount: float
@@ -167,14 +168,37 @@ class PushSubscription(BaseModel):
 class JoinGroup(BaseModel):
     invite_code: str
 
+class Category(BaseModel):
+    name: str
+    emoji: str = "📦"
+
+class CategoryUpdate(BaseModel):
+    name: Optional[str] = None
+    emoji: Optional[str] = None
+
+class ChangePinBody(BaseModel):
+    old_pin: str
+    new_pin: str
+
+
+# --- Helpers ---
+def _require_owner(row, user_id: str):
+    if not row:
+        raise HTTPException(404, "Not found")
+    if row["user_id"] != user_id:
+        raise HTTPException(403, "Forbidden")
+
+def _check_cron(secret: Optional[str]):
+    if CRON_SECRET and secret != CRON_SECRET:
+        raise HTTPException(403, "Forbidden")
+
+
 # --- Auth ---
 @app.post("/api/auth/register")
 def register(body: RegisterBody, db: sqlite3.Connection = Depends(get_db)):
     if len(body.pin) != 4 or not body.pin.isdigit():
         raise HTTPException(400, "PIN must be 4 digits")
-    pin_hash = hash_pin(body.pin)
-    existing = db.execute("SELECT id FROM users WHERE pin_hash=?", (pin_hash,)).fetchone()
-    if existing:
+    if db.execute("SELECT id FROM users WHERE pin_hash=?", (hash_pin(body.pin),)).fetchone():
         raise HTTPException(409, "PIN already taken")
     uid = str(uuid.uuid4())
     invite = gen_invite()
@@ -182,14 +206,13 @@ def register(body: RegisterBody, db: sqlite3.Connection = Depends(get_db)):
         invite = gen_invite()
     now = datetime.now().isoformat()
     db.execute("INSERT INTO users VALUES (?,?,?,?,?,?)",
-               (uid, body.name, pin_hash, body.color, invite, now))
+               (uid, body.name, hash_pin(body.pin), body.color, invite, now))
     db.commit()
     return {"id": uid, "name": body.name, "color": body.color, "invite_code": invite}
 
 @app.post("/api/auth/login")
 def login(body: LoginBody, db: sqlite3.Connection = Depends(get_db)):
-    pin_hash = hash_pin(body.pin)
-    user = db.execute("SELECT * FROM users WHERE pin_hash=?", (pin_hash,)).fetchone()
+    user = db.execute("SELECT * FROM users WHERE pin_hash=?", (hash_pin(body.pin),)).fetchone()
     if not user:
         raise HTTPException(404, "User not found")
     return dict(user)
@@ -201,10 +224,6 @@ def get_me(user_id: str = Query(...), db: sqlite3.Connection = Depends(get_db)):
         raise HTTPException(404, "Not found")
     return dict(user)
 
-class ChangePinBody(BaseModel):
-    old_pin: str
-    new_pin: str
-
 @app.patch("/api/auth/pin")
 def change_pin(body: ChangePinBody, user_id: str = Query(...), db: sqlite3.Connection = Depends(get_db)):
     if len(body.new_pin) != 4 or not body.new_pin.isdigit():
@@ -214,15 +233,32 @@ def change_pin(body: ChangePinBody, user_id: str = Query(...), db: sqlite3.Conne
         raise HTTPException(404, "Not found")
     if dict(user)["pin_hash"] != hash_pin(body.old_pin):
         raise HTTPException(403, "Wrong current PIN")
-    new_hash = hash_pin(body.new_pin)
-    existing = db.execute("SELECT id FROM users WHERE pin_hash=? AND id!=?", (new_hash, user_id)).fetchone()
-    if existing:
+    if db.execute("SELECT id FROM users WHERE pin_hash=? AND id!=?", (hash_pin(body.new_pin), user_id)).fetchone():
         raise HTTPException(409, "PIN already taken")
-    db.execute("UPDATE users SET pin_hash=? WHERE id=?", (new_hash, user_id))
+    db.execute("UPDATE users SET pin_hash=? WHERE id=?", (hash_pin(body.new_pin), user_id))
     db.commit()
     return {"ok": True}
 
-# --- Groups (joint budget) ---
+@app.delete("/api/auth/account")
+def delete_account(user_id: str = Query(...), db: sqlite3.Connection = Depends(get_db)):
+    """Delete account and all associated data."""
+    if not db.execute("SELECT id FROM users WHERE id=?", (user_id,)).fetchone():
+        raise HTTPException(404, "Not found")
+    # Leave any groups first (clean up empty groups)
+    for row in db.execute("SELECT group_id FROM group_members WHERE user_id=?", (user_id,)).fetchall():
+        gid = row["group_id"]
+        db.execute("DELETE FROM group_members WHERE user_id=? AND group_id=?", (user_id, gid))
+        if not db.execute("SELECT 1 FROM group_members WHERE group_id=?", (gid,)).fetchone():
+            db.execute("DELETE FROM groups WHERE id=?", (gid,))
+    # Delete all user data
+    for table in ("transactions", "savings", "reminders", "push_subscriptions", "categories"):
+        db.execute(f"DELETE FROM {table} WHERE user_id=?", (user_id,))
+    db.execute("DELETE FROM users WHERE id=?", (user_id,))
+    db.commit()
+    return {"ok": True}
+
+
+# --- Groups ---
 @app.post("/api/groups/join")
 def join_group(body: JoinGroup, user_id: str = Query(...), db: sqlite3.Connection = Depends(get_db)):
     target = db.execute("SELECT * FROM users WHERE invite_code=?", (body.invite_code.upper(),)).fetchone()
@@ -230,14 +266,11 @@ def join_group(body: JoinGroup, user_id: str = Query(...), db: sqlite3.Connectio
         raise HTTPException(404, "Invite code not found")
     if target["id"] == user_id:
         raise HTTPException(400, "Cannot join yourself")
-    # Check if already in a group together
-    my_groups = db.execute("SELECT group_id FROM group_members WHERE user_id=?", (user_id,)).fetchall()
-    my_group_ids = [r["group_id"] for r in my_groups]
-    for gid in my_group_ids:
-        member = db.execute("SELECT 1 FROM group_members WHERE user_id=? AND group_id=?", (target["id"], gid)).fetchone()
-        if member:
+    my_groups = [r["group_id"] for r in
+                 db.execute("SELECT group_id FROM group_members WHERE user_id=?", (user_id,)).fetchall()]
+    for gid in my_groups:
+        if db.execute("SELECT 1 FROM group_members WHERE user_id=? AND group_id=?", (target["id"], gid)).fetchone():
             raise HTTPException(409, "Already in a group together")
-    # Find or create group
     gid = str(uuid.uuid4())
     now = datetime.now().isoformat()
     db.execute("INSERT INTO groups VALUES (?,?,?)", (gid, "Совместный бюджет", now))
@@ -263,8 +296,7 @@ def my_groups(user_id: str = Query(...), db: sqlite3.Connection = Depends(get_db
 @app.delete("/api/groups/{group_id}/leave")
 def leave_group(group_id: str, user_id: str = Query(...), db: sqlite3.Connection = Depends(get_db)):
     db.execute("DELETE FROM group_members WHERE user_id=? AND group_id=?", (user_id, group_id))
-    remaining = db.execute("SELECT COUNT(*) as cnt FROM group_members WHERE group_id=?", (group_id,)).fetchone()
-    if remaining["cnt"] == 0:
+    if not db.execute("SELECT 1 FROM group_members WHERE group_id=?", (group_id,)).fetchone():
         db.execute("DELETE FROM groups WHERE id=?", (group_id,))
     db.commit()
     return {"ok": True}
@@ -273,61 +305,67 @@ def leave_group(group_id: str, user_id: str = Query(...), db: sqlite3.Connection
 def get_joint(user_id: str = Query(...), db: sqlite3.Connection = Depends(get_db)):
     gids = db.execute("SELECT group_id FROM group_members WHERE user_id=?", (user_id,)).fetchall()
     result = []
-    seen_users = set()
+    seen = set()
     for row in gids:
-        gid = row["group_id"]
-        members = db.execute("""
+        for m in db.execute("""
             SELECT u.* FROM users u
             JOIN group_members gm ON u.id = gm.user_id
             WHERE gm.group_id = ?
-        """, (gid,)).fetchall()
-        for m in members:
-            if m["id"] in seen_users:
+        """, (row["group_id"],)).fetchall():
+            if m["id"] in seen:
                 continue
-            seen_users.add(m["id"])
-            txs = db.execute("SELECT * FROM transactions WHERE user_id=?", (m["id"],)).fetchall()
-            income = sum(r["amount"] for r in txs if r["type"] == "income")
-            expense = sum(r["amount"] for r in txs if r["type"] == "expense")
-            cats = {}
-            for r in txs:
-                if r["type"] == "expense":
-                    cats[r["category"]] = cats.get(r["category"], 0) + r["amount"]
+            seen.add(m["id"])
+            txs  = db.execute("SELECT * FROM transactions WHERE user_id=?", (m["id"],)).fetchall()
             savs = db.execute("SELECT * FROM savings WHERE user_id=?", (m["id"],)).fetchall()
-            saved = sum(r["current"] for r in savs)
+            cats = {}
+            for t in txs:
+                if t["type"] == "expense":
+                    cats[t["category"]] = cats.get(t["category"], 0) + t["amount"]
             recent = db.execute(
-                "SELECT * FROM transactions WHERE user_id=? ORDER BY created_at DESC LIMIT 5",
-                (m["id"],)
+                "SELECT * FROM transactions WHERE user_id=? ORDER BY created_at DESC LIMIT 5", (m["id"],)
             ).fetchall()
             result.append({
-                "profile": {"id": m["id"], "name": m["name"], "color": m["color"]},
-                "income": income, "expense": expense,
-                "balance": income - expense, "saved": saved,
-                "by_category": cats, "recent_tx": [dict(r) for r in recent]
+                "profile":     {"id": m["id"], "name": m["name"], "color": m["color"]},
+                "income":      sum(t["amount"] for t in txs if t["type"] == "income"),
+                "expense":     sum(t["amount"] for t in txs if t["type"] == "expense"),
+                "balance":     sum(t["amount"] for t in txs if t["type"] == "income") -
+                               sum(t["amount"] for t in txs if t["type"] == "expense"),
+                "saved":       sum(s["current"] for s in savs),
+                "by_category": cats,
+                "recent_tx":   [dict(r) for r in recent],
             })
     return result
+
 
 # --- Transactions ---
 @app.get("/api/transactions")
 def list_transactions(user_id: str = Query(...), db: sqlite3.Connection = Depends(get_db)):
-    rows = db.execute("SELECT * FROM transactions WHERE user_id=? ORDER BY created_at DESC", (user_id,)).fetchall()
+    rows = db.execute(
+        "SELECT * FROM transactions WHERE user_id=? ORDER BY created_at DESC", (user_id,)
+    ).fetchall()
     return [dict(r) for r in rows]
 
 @app.post("/api/transactions")
 def add_transaction(tx: Transaction, user_id: str = Query(...), db: sqlite3.Connection = Depends(get_db)):
+    if tx.amount <= 0:
+        raise HTTPException(400, "Amount must be positive")
     uid = str(uuid.uuid4())
     now = datetime.now().isoformat()
-    date_str = datetime.now().strftime("%d.%m")
-    db.execute("INSERT INTO transactions (id, user_id, name, amount, category, type, date, created_at) VALUES (?,?,?,?,?,?,?,?)",
-               (uid, user_id, tx.name, tx.amount, tx.category, tx.type, date_str, now))
+    date_str = tx.date if tx.date else datetime.now().strftime("%d.%m")
+    db.execute(
+        "INSERT INTO transactions (id,user_id,name,amount,category,type,date,created_at) VALUES (?,?,?,?,?,?,?,?)",
+        (uid, user_id, tx.name, tx.amount, tx.category, tx.type, date_str, now))
     db.commit()
     return {"id": uid, "user_id": user_id, "name": tx.name, "amount": tx.amount,
             "category": tx.category, "type": tx.type, "date": date_str, "created_at": now}
 
 @app.delete("/api/transactions/{tx_id}")
-def delete_transaction(tx_id: str, db: sqlite3.Connection = Depends(get_db)):
+def delete_transaction(tx_id: str, user_id: str = Query(...), db: sqlite3.Connection = Depends(get_db)):
+    _require_owner(db.execute("SELECT user_id FROM transactions WHERE id=?", (tx_id,)).fetchone(), user_id)
     db.execute("DELETE FROM transactions WHERE id=?", (tx_id,))
     db.commit()
     return {"ok": True}
+
 
 # --- Savings ---
 @app.get("/api/savings")
@@ -337,57 +375,101 @@ def list_savings(user_id: str = Query(...), db: sqlite3.Connection = Depends(get
 
 @app.post("/api/savings")
 def add_saving(s: Saving, user_id: str = Query(...), db: sqlite3.Connection = Depends(get_db)):
+    if s.target <= 0:
+        raise HTTPException(400, "Target must be positive")
     uid = str(uuid.uuid4())
     now = datetime.now().isoformat()
-    db.execute("INSERT INTO savings (id, user_id, name, target, current, color, created_at) VALUES (?,?,?,?,?,?,?)",
+    db.execute("INSERT INTO savings (id,user_id,name,target,current,color,created_at) VALUES (?,?,?,?,?,?,?)",
                (uid, user_id, s.name, s.target, s.current, s.color, now))
     db.commit()
     return {"id": uid, "user_id": user_id, **s.dict(), "created_at": now}
 
 @app.patch("/api/savings/{sav_id}/add")
-def add_to_saving(sav_id: str, body: SavingAdd, db: sqlite3.Connection = Depends(get_db)):
+def add_to_saving(sav_id: str, body: SavingAdd, user_id: str = Query(...), db: sqlite3.Connection = Depends(get_db)):
     row = db.execute("SELECT * FROM savings WHERE id=?", (sav_id,)).fetchone()
-    if not row:
-        raise HTTPException(404, "Not found")
+    _require_owner(row, user_id)
+    if body.amount <= 0:
+        raise HTTPException(400, "Amount must be positive")
     new_val = min(dict(row)["current"] + body.amount, dict(row)["target"])
     db.execute("UPDATE savings SET current=? WHERE id=?", (new_val, sav_id))
     db.commit()
     return {"current": new_val}
 
 @app.delete("/api/savings/{sav_id}")
-def delete_saving(sav_id: str, db: sqlite3.Connection = Depends(get_db)):
+def delete_saving(sav_id: str, user_id: str = Query(...), db: sqlite3.Connection = Depends(get_db)):
+    _require_owner(db.execute("SELECT user_id FROM savings WHERE id=?", (sav_id,)).fetchone(), user_id)
     db.execute("DELETE FROM savings WHERE id=?", (sav_id,))
     db.commit()
     return {"ok": True}
 
+
 # --- Reminders ---
 @app.get("/api/reminders")
 def list_reminders(user_id: str = Query(...), db: sqlite3.Connection = Depends(get_db)):
-    rows = db.execute("SELECT * FROM reminders WHERE user_id=? ORDER BY created_at DESC", (user_id,)).fetchall()
+    rows = db.execute(
+        "SELECT * FROM reminders WHERE user_id=? ORDER BY created_at DESC", (user_id,)
+    ).fetchall()
     return [dict(r) for r in rows]
 
 @app.post("/api/reminders")
 def add_reminder(r: Reminder, user_id: str = Query(...), db: sqlite3.Connection = Depends(get_db)):
     uid = str(uuid.uuid4())
     now = datetime.now().isoformat()
-    db.execute(
-        "INSERT INTO reminders (id, user_id, text, tag, done, due_date, created_at) VALUES (?,?,?,?,?,?,?)",
-        (uid, user_id, r.text, r.tag, 0, r.due_date, now))
+    db.execute("INSERT INTO reminders (id,user_id,text,tag,done,due_date,created_at) VALUES (?,?,?,?,?,?,?)",
+               (uid, user_id, r.text, r.tag, 0, r.due_date, now))
     db.commit()
     return {"id": uid, "user_id": user_id, "text": r.text, "tag": r.tag,
             "done": False, "due_date": r.due_date, "created_at": now}
 
 @app.patch("/api/reminders/{rem_id}")
-def toggle_reminder(rem_id: str, body: ReminderToggle, db: sqlite3.Connection = Depends(get_db)):
+def toggle_reminder(rem_id: str, body: ReminderToggle, user_id: str = Query(...), db: sqlite3.Connection = Depends(get_db)):
+    _require_owner(db.execute("SELECT user_id FROM reminders WHERE id=?", (rem_id,)).fetchone(), user_id)
     db.execute("UPDATE reminders SET done=? WHERE id=?", (1 if body.done else 0, rem_id))
     db.commit()
     return {"ok": True}
 
 @app.delete("/api/reminders/{rem_id}")
-def delete_reminder(rem_id: str, db: sqlite3.Connection = Depends(get_db)):
+def delete_reminder(rem_id: str, user_id: str = Query(...), db: sqlite3.Connection = Depends(get_db)):
+    _require_owner(db.execute("SELECT user_id FROM reminders WHERE id=?", (rem_id,)).fetchone(), user_id)
     db.execute("DELETE FROM reminders WHERE id=?", (rem_id,))
     db.commit()
     return {"ok": True}
+
+
+# --- Categories ---
+@app.get("/api/categories")
+def list_categories(user_id: str = Query(...), db: sqlite3.Connection = Depends(get_db)):
+    rows = db.execute("SELECT * FROM categories WHERE user_id=? ORDER BY created_at ASC", (user_id,)).fetchall()
+    return [dict(r) for r in rows]
+
+@app.post("/api/categories")
+def add_category(cat: Category, user_id: str = Query(...), db: sqlite3.Connection = Depends(get_db)):
+    if not cat.name.strip():
+        raise HTTPException(400, "Name required")
+    uid = str(uuid.uuid4())
+    now = datetime.now().isoformat()
+    db.execute("INSERT INTO categories VALUES (?,?,?,?,?)",
+               (uid, user_id, cat.name.strip(), cat.emoji, now))
+    db.commit()
+    return {"id": uid, "user_id": user_id, "name": cat.name.strip(), "emoji": cat.emoji, "created_at": now}
+
+@app.patch("/api/categories/{cat_id}")
+def update_category(cat_id: str, body: CategoryUpdate, user_id: str = Query(...), db: sqlite3.Connection = Depends(get_db)):
+    row = db.execute("SELECT * FROM categories WHERE id=?", (cat_id,)).fetchone()
+    _require_owner(row, user_id)
+    new_name  = body.name.strip() if body.name  else row["name"]
+    new_emoji = body.emoji        if body.emoji else row["emoji"]
+    db.execute("UPDATE categories SET name=?, emoji=? WHERE id=?", (new_name, new_emoji, cat_id))
+    db.commit()
+    return {"ok": True, "name": new_name, "emoji": new_emoji}
+
+@app.delete("/api/categories/{cat_id}")
+def delete_category(cat_id: str, user_id: str = Query(...), db: sqlite3.Connection = Depends(get_db)):
+    _require_owner(db.execute("SELECT user_id FROM categories WHERE id=?", (cat_id,)).fetchone(), user_id)
+    db.execute("DELETE FROM categories WHERE id=?", (cat_id,))
+    db.commit()
+    return {"ok": True}
+
 
 # --- Push ---
 @app.get("/api/push/vapid-public")
@@ -396,8 +478,8 @@ def get_vapid_public():
 
 @app.post("/api/push/subscribe")
 def subscribe_push(body: PushSubscription, user_id: str = Query(...), db: sqlite3.Connection = Depends(get_db)):
-    uid = str(uuid.uuid4())
-    now = datetime.now().isoformat()
+    uid      = str(uuid.uuid4())
+    now      = datetime.now().isoformat()
     sub_json = json.dumps(body.subscription)
     endpoint = body.subscription.get("endpoint", "")
     db.execute("DELETE FROM push_subscriptions WHERE user_id=? AND subscription LIKE ?",
@@ -408,13 +490,17 @@ def subscribe_push(body: PushSubscription, user_id: str = Query(...), db: sqlite
 
 def send_push(user_id: str, title: str, body: str, db: sqlite3.Connection):
     try:
-        from pywebpush import webpush, WebPushException
-        subs = db.execute("SELECT subscription FROM push_subscriptions WHERE user_id=?", (user_id,)).fetchall()
-        for row in subs:
+        from pywebpush import webpush
+        for row in db.execute(
+            "SELECT subscription FROM push_subscriptions WHERE user_id=?", (user_id,)
+        ).fetchall():
             try:
-                sub = json.loads(row["subscription"])
-                webpush(subscription_info=sub, data=json.dumps({"title": title, "body": body}),
-                        vapid_private_key=VAPID_PRIVATE, vapid_claims={"sub": VAPID_EMAIL})
+                webpush(
+                    subscription_info=json.loads(row["subscription"]),
+                    data=json.dumps({"title": title, "body": body}),
+                    vapid_private_key=VAPID_PRIVATE,
+                    vapid_claims={"sub": VAPID_EMAIL},
+                )
             except Exception as e:
                 if "410" in str(e) or "404" in str(e):
                     db.execute("DELETE FROM push_subscriptions WHERE subscription=?", (row["subscription"],))
@@ -428,29 +514,25 @@ def test_push(user_id: str = Query(...), db: sqlite3.Connection = Depends(get_db
     return {"ok": True}
 
 @app.get("/api/push/check-today")
-def check_today(db: sqlite3.Connection = Depends(get_db)):
-    today = date.today().isoformat()
-    rows = db.execute(
-        "SELECT * FROM reminders WHERE due_date=? AND done=0", (today,)
-    ).fetchall()
-    by_user = {}
-    for r in rows:
-        uid = r["user_id"]
-        if uid not in by_user:
-            by_user[uid] = []
-        by_user[uid].append(r["text"])
+def check_today(x_cron_secret: Optional[str] = Header(None), db: sqlite3.Connection = Depends(get_db)):
+    _check_cron(x_cron_secret)
+    today   = date.today().isoformat()
+    by_user: dict = {}
+    for r in db.execute("SELECT * FROM reminders WHERE due_date=? AND done=0", (today,)).fetchall():
+        by_user.setdefault(r["user_id"], []).append(r["text"])
     for uid, tasks in by_user.items():
         count = len(tasks)
-        body = tasks[0] if count == 1 else f"{tasks[0]} и ещё {count-1}"
-        send_push(uid, f"Дела на сегодня ({count})", body, db)
+        send_push(uid, f"Дела на сегодня ({count})",
+                  tasks[0] if count == 1 else f"{tasks[0]} и ещё {count - 1}", db)
     return {"notified": len(by_user)}
 
 @app.get("/api/push/remind-finances")
-def remind_finances(db: sqlite3.Connection = Depends(get_db)):
-    users = db.execute("SELECT id FROM users").fetchall()
-    for u in users:
+def remind_finances(x_cron_secret: Optional[str] = Header(None), db: sqlite3.Connection = Depends(get_db)):
+    _check_cron(x_cron_secret)
+    for u in db.execute("SELECT id FROM users").fetchall():
         send_push(u["id"], "Финансы 💰", "Не забудь записать расходы за сегодня!", db)
     return {"ok": True}
+
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
