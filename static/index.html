@@ -843,7 +843,7 @@ function renderHeader(){
   const inc  = allTx.filter(t=>t.type==='income').reduce((a,t)=>a+t.amount,0);
   const exp  = allTx.filter(t=>t.type==='expense').reduce((a,t)=>a+t.amount,0);
   const saved = allSav.reduce((a,s)=>a+s.current,0);
-  const bal  = inc - exp - saved;
+  const bal  = inc - exp;
   const bel  = document.getElementById('balance-val');
   const newTxt = fmt(Math.abs(bal));
   if(bel.textContent !== newTxt){
