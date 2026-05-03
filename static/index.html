@@ -344,7 +344,7 @@ input[type="date"]{color-scheme:dark}
           <div class="type-pill pill-exp" id="pill-exp" onclick="setType('expense')">— Расход</div>
           <div class="type-pill" id="pill-inc" onclick="setType('income')">+ Доход</div>
         </div>
-        <input class="inp" id="qa-name" placeholder="Название..." />
+        <input class="inp" id="qa-name" placeholder="Название или «такси 350»..." />
         <div class="inp-row">
           <input class="inp2" id="qa-amt" type="number" placeholder="Сумма ₽" min="0.01" />
           <div style="position:relative">
@@ -572,6 +572,49 @@ const DEFAULT_CATEGORIES = [
   {emoji:'💊',name:'Здоровье'},{emoji:'🏠',name:'Коммуналка'},{emoji:'💼',name:'Зарплата'},
   {emoji:'🔧',name:'Подработка'},{emoji:'📦',name:'Другое'},
 ];
+
+// === Smart category detection ===
+const CAT_MAP = [
+  {cat:'Еда',       words:['пятёрочка','пятерочка','магнит','вкусвилл','лента','ашан','перекрёсток','перекресток','дикси','окей','фикспрайс','fixprice','spar','metro','продукты','хлеб','молоко','мясо','овощи','супермаркет','гипермаркет','дикси','красное белое','billa','билла']},
+  {cat:'Транспорт',  words:['яндекс такси','яндекстакси','такси','убер','uber','бензин','заправка','лукойл','роснефть','газпромнефть','метро','автобус','маршрутка','трамвай','электричка','ласточка','сапсан','аэроэкспресс','делимобиль','каршеринг','парковка','штраф гибдд']},
+  {cat:'Еда',       words:['самокат','яндекс еда','яндекседа','delivery club','deliveryclub','сушкоф','додо','пицца','суши','роллы','бургер','mcdonald','kfc','burger king','бургер кинг','старбакс','starbucks','шаурма','кофейня','coffeeshop','кофе','чай','столовая','ресторан','кафе']},
+  {cat:'Одежда',    words:['wildberries','вайлдберриз','wb ','ozon','озон','aliexpress','ali ','lamoda','зара','zara','h&m','uniqlo','юникло','одежда','обувь','кроссовки','куртка']},
+  {cat:'Подписки',  words:['яндекс плюс','яндекс+','яндексплюс','spotify','нетфликс','netflix','кинопоиск','иви','okko','premier','youtube premium','vk музыка','apple music','telegram premium','chatgpt','подписка','абонплата']},
+  {cat:'Развлечения',words:['кино','кинотеатр','steam','playstation','xbox','концерт','театр','музей','боулинг','квест','батут','игра ','игры']},
+  {cat:'Здоровье',  words:['аптека','больница','клиника','врач','лекарства','витамины','анализы','стоматолог','зубной','спортзал','gym','фитнес','массаж']},
+  {cat:'Коммуналка',words:['коммуналка','жкх','свет ','вода ','газ ','интернет','мобильный','связь','электричество','отопление','квартплата','ростелеком','билайн','мтс','мегафон','теле2']},
+  {cat:'Техника',   words:['dns','эльдорадо','мвидео','м.видео','re:store','apple store','samsung','телефон','ноутбук','наушники','зарядка','гаджет','планшет','смартфон']},
+];
+
+function detectCategory(name){
+  const lower = ' ' + name.toLowerCase() + ' ';
+  let best = null, bestLen = 0;
+  for(const entry of CAT_MAP){
+    for(const word of entry.words){
+      if(lower.includes(word) && word.length > bestLen){
+        best = entry.cat; bestLen = word.length;
+      }
+    }
+  }
+  return best;
+}
+
+function parseQuickInput(text){
+  // Match last standalone number (int or decimal) — e.g. "такси 350" or "350 такси"
+  const m = text.match(/^(.*?)(\d+(?:[.,]\d+)?)(\s*)$/) || text.match(/^(\d+(?:[.,]\d+)?)(\s+)(.+)$/);
+  if(!m) return null;
+  let name, amount;
+  // Pattern 1: "text 350"
+  const p1 = text.match(/^(.+?)\s+(\d+(?:[.,]\d+)?)\s*$/);
+  // Pattern 2: "350 text"
+  const p2 = text.match(/^(\d+(?:[.,]\d+)?)\s+(.+)$/);
+  if(p1){ name = p1[1].trim(); amount = parseFloat(p1[2].replace(',','.')); }
+  else if(p2){ amount = parseFloat(p2[1].replace(',','.')); name = p2[2].trim(); }
+  else return null;
+  if(!name || !amount || amount <= 0) return null;
+  const category = detectCategory(name);
+  return { name, amount, category };
+}
 
 let regColor = PROFILE_COLORS[0];
 let newSavColor = SAV_COLORS[0];
@@ -967,14 +1010,33 @@ function renderCatChart(){
   });
 }
 
+function calcMicroSpending(){
+  const small = allTx.filter(t=>t.type==='expense' && t.amount<=300);
+  return { sum: small.reduce((a,t)=>a+t.amount,0), count: small.length };
+}
+
+function detectOverSpending(){
+  const exp = allTx.filter(t=>t.type==='expense');
+  const total = exp.reduce((a,t)=>a+t.amount,0);
+  if(!total) return [];
+  const cats={};
+  exp.forEach(t=>{ cats[t.category]=(cats[t.category]||0)+t.amount; });
+  return Object.entries(cats)
+    .filter(([,s])=> s>3000 || s/total>0.3)
+    .sort((a,b)=>b[1]-a[1])
+    .slice(0,3)
+    .map(([cat,sum])=>({cat,sum}));
+}
+
 function renderInsights(){
-  const inc = allTx.filter(t=>t.type==='income').reduce((a,t)=>a+t.amount,0);
-  const exp = allTx.filter(t=>t.type==='expense').reduce((a,t)=>a+t.amount,0);
+  const inc  = allTx.filter(t=>t.type==='income').reduce((a,t)=>a+t.amount,0);
+  const exp  = allTx.filter(t=>t.type==='expense').reduce((a,t)=>a+t.amount,0);
   const saved = allSav.reduce((a,s)=>a+s.current,0);
   const cats={};
   allTx.filter(t=>t.type==='expense').forEach(t=>{cats[t.category]=(cats[t.category]||0)+t.amount});
   const sorted = Object.entries(cats).sort((a,b)=>b[1]-a[1]);
   const ins=[];
+
   if(sorted.length) ins.push({i:'📊',t:`Больше всего трат на <strong>${sorted[0][0]}</strong> — ${fmt(sorted[0][1])}`});
   if(inc>0){
     const pct=Math.round(exp/inc*100);
@@ -982,6 +1044,16 @@ function renderInsights(){
     else if(pct<70) ins.push({i:'✅',t:`Хороший баланс — тратишь ${pct}% доходов`});
   }
   if(saved>0) ins.push({i:'🎯',t:`В накоплениях <strong>${fmt(saved)}</strong>`});
+
+  // Скрытые мелкие расходы
+  const micro = calcMicroSpending();
+  if(micro.sum>5000) ins.push({i:'☕',t:`Мелкие траты до 300₽ — <strong>${fmt(micro.sum)}</strong> (${micro.count} покупок). Незаметно, но много!`});
+
+  // Перерасход по категориям
+  detectOverSpending().forEach(o=>{
+    ins.push({i:'💸',t:`Потрачено на ${getCatEmoji(o.cat)} <strong>${o.cat}</strong> — ${fmt(o.sum)}`});
+  });
+
   if(!ins.length) ins.push({i:'💡',t:'Добавь транзакции, чтобы увидеть советы.'});
   document.getElementById('insights').innerHTML = ins.map(x=>`
     <div style="display:flex;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--border)">
@@ -1517,6 +1589,25 @@ if('serviceWorker' in navigator){
 document.getElementById('btn-with-date').addEventListener('click',()=>{ setEndlessMode(false); addReminder(false); });
 document.getElementById('btn-endless').addEventListener('click',()=>{ setEndlessMode(true); addReminder(true); });
 document.getElementById('rem-date').addEventListener('change',e=>{ selectedDate=e.target.value; renderWeekPlanner(); });
+
+// Quick input: parse "название сумма" on blur
+document.getElementById('qa-name').addEventListener('blur', e=>{
+  const val = e.target.value.trim();
+  if(!val) return;
+  const parsed = parseQuickInput(val);
+  if(!parsed) return;
+  // Fill amount only if empty
+  const amtEl = document.getElementById('qa-amt');
+  if(!amtEl.value) amtEl.value = parsed.amount;
+  // Clean name (remove the number)
+  e.target.value = parsed.name;
+  // Set category if detected
+  if(parsed.category){
+    const sel = document.getElementById('qa-cat');
+    const opt = [...sel.options].find(o=>o.value===parsed.category);
+    if(opt) sel.value = parsed.category;
+  }
+});
 
 // Enter key shortcuts
 document.getElementById('qa-name').addEventListener('keydown',e=>{ if(e.key==='Enter') addTransaction(); });
