@@ -14,18 +14,42 @@
 <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg:#0f0f0f; --bg2:#181818; --bg3:#222; --bg4:#2a2a2a;
-  --border:rgba(255,255,255,0.07); --border2:rgba(255,255,255,0.13);
-  --text:#f0f0f0; --muted:#666; --muted2:#888;
+  --bg:rgba(6,6,14,0.82); --bg2:rgba(255,255,255,0.06); --bg3:rgba(255,255,255,0.1); --bg4:rgba(255,255,255,0.14);
+  --border:rgba(255,255,255,0.07); --border2:rgba(255,255,255,0.15);
+  --text:#f0f0f0; --muted:#555; --muted2:#888;
   --green:#4ade80; --red:#f87171; --blue:#60a5fa;
   --amber:#fbbf24; --purple:#a78bfa; --teal:#2dd4bf;
   --r:14px;
+  --theme-bg:linear-gradient(145deg,#0a0814 0%,#0d0f1e 45%,#08100a 100%);
+  --orb1:rgba(120,60,220,0.22); --orb2:rgba(30,100,200,0.14);
+}
+[data-theme="slate"]{
+  --theme-bg:linear-gradient(145deg,#040c1c 0%,#09162a 45%,#040e1a 100%);
+  --orb1:rgba(56,130,246,0.24); --orb2:rgba(14,160,230,0.14);
+  --text:#cdd5e0; --muted:#485060; --muted2:#7888a0; --blue:#60a5fa;
+}
+[data-theme="evergreen"]{
+  --theme-bg:linear-gradient(145deg,#030e06 0%,#07180a 45%,#030e06 100%);
+  --orb1:rgba(34,200,94,0.22); --orb2:rgba(16,185,130,0.13);
+  --text:#c8e8d0; --muted:#2a5035; --muted2:#4a7858;
+}
+[data-theme="warm"]{
+  --bg:rgba(245,238,225,0.86); --bg2:rgba(255,255,255,0.65); --bg3:rgba(238,230,215,0.72); --bg4:rgba(228,220,205,0.82);
+  --border:rgba(0,0,0,0.06); --border2:rgba(0,0,0,0.13);
+  --theme-bg:linear-gradient(145deg,#ede5d8 0%,#f5ede0 50%,#e8e0d0 100%);
+  --orb1:rgba(251,190,36,0.22); --orb2:rgba(248,112,22,0.12);
+  --text:#1a1a1a; --muted:#999; --muted2:#777;
+  --green:#2a7a45; --red:#e04040; --blue:#1a5ab0;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Onest',sans-serif;font-size:15px;overscroll-behavior:none}
+html{min-height:100%;background:var(--theme-bg);background-attachment:fixed;transition:background .5s}
+html::before,html::after{content:'';position:fixed;border-radius:50%;pointer-events:none;z-index:0;transition:background .6s}
+html::before{width:400px;height:400px;background:radial-gradient(circle,var(--orb1) 0%,transparent 70%);top:-120px;right:-80px}
+html::after{width:300px;height:300px;background:radial-gradient(circle,var(--orb2) 0%,transparent 70%);bottom:100px;left:-70px}
+body{height:100%;background:transparent;color:var(--text);font-family:'Onest',sans-serif;font-size:15px;overscroll-behavior:none}
 
 /* Profile picker screen */
-#profile-screen{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem}
+#profile-screen{position:fixed;inset:0;background:var(--bg);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem}
 #profile-screen.hidden{display:none}
 .ps-logo{font-size:40px;margin-bottom:1.5rem}
 .ps-title{font-size:22px;font-weight:600;margin-bottom:6px;text-align:center}
@@ -40,10 +64,10 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Onest'
 .ps-new button{padding:12px 16px;border-radius:10px;background:var(--text);color:var(--bg);font-size:14px;font-weight:600;border:none;cursor:pointer;font-family:inherit}
 
 /* Main app */
-.app{display:flex;flex-direction:column;height:100dvh;max-width:480px;margin:0 auto}
+.app{display:flex;flex-direction:column;height:100dvh;max-width:480px;margin:0 auto;position:relative;z-index:1}
 
 /* Header */
-.header{padding:14px 16px 10px;padding-top:calc(14px + env(safe-area-inset-top));background:var(--bg);border-bottom:0.5px solid var(--border);flex-shrink:0}
+.header{padding:14px 16px 10px;padding-top:calc(14px + env(safe-area-inset-top));background:var(--bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:0.5px solid var(--border);flex-shrink:0}
 .header-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 .profile-badge{display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--bg2);border:0.5px solid var(--border2);border-radius:20px;padding:6px 12px 6px 6px}
 .pb-avatar{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600}
@@ -68,7 +92,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Onest'
 .content{flex:1;overflow-y:auto;padding:14px;padding-bottom:85px}
 
 /* Bottom nav */
-.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--bg);border-top:0.5px solid var(--border);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:100}
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:0.5px solid var(--border);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:100}
 .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:9px 0 7px;cursor:pointer;gap:3px}
 .nav-icon{font-size:18px;line-height:1}
 .nav-label{font-size:9px;color:var(--muted)}
@@ -77,10 +101,10 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Onest'
 /* Sections */
 .section{display:none}
 @keyframes tabEnter{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
-.section.active{display:block;animation:tabEnter .2s ease-out}
+.section.active{display:block;animation:tabEnter .2s ease-out both}
 
 /* Cards & forms */
-.card{background:var(--bg2);border-radius:var(--r);padding:14px;margin-bottom:10px;border:0.5px solid var(--border)}
+.card{background:var(--bg2);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:var(--r);padding:14px;margin-bottom:10px;border:0.5px solid var(--border)}
 .card-title{font-size:12px;color:var(--muted);font-weight:500;margin-bottom:10px}
 .inp{width:100%;background:var(--bg3);border:0.5px solid var(--border2);border-radius:9px;padding:10px 12px;color:var(--text);font-size:16px;font-family:inherit;outline:none;margin-bottom:7px}
 .inp:focus{border-color:rgba(255,255,255,.25)}
@@ -96,7 +120,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Onest'
 .pill-inc{background:rgba(74,222,128,.12);color:var(--green);border-color:rgba(74,222,128,.25)}
 
 /* Transactions */
-.tx-list-card{background:var(--bg2);border-radius:var(--r);border:0.5px solid var(--border);overflow:hidden;margin-bottom:8px}
+.tx-list-card{background:var(--bg2);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:var(--r);border:0.5px solid var(--border);overflow:hidden;margin-bottom:8px}
 .tx-item{display:flex;align-items:center;gap:10px;padding:11px 13px;border-bottom:0.5px solid var(--border)}
 .tx-item:last-child{border-bottom:none}
 .tx-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
@@ -121,7 +145,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Onest'
 .hist-stat-v{font-size:12px;font-weight:600}
 
 /* Savings */
-.sav-card{background:var(--bg2);border-radius:var(--r);padding:13px;margin-bottom:8px;border:0.5px solid var(--border)}
+.sav-card{background:var(--bg2);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:var(--r);padding:13px;margin-bottom:8px;border:0.5px solid var(--border)}
 .sav-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
 .sav-name{font-size:14px;font-weight:600}
 .sav-sub{font-size:11px;color:var(--muted);margin-top:2px}
@@ -170,15 +194,21 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Onest'
 .ps-tx-mini{background:var(--bg2);border-radius:10px;border:0.5px solid var(--border);overflow:hidden}
 .ps-tx-item{display:flex;align-items:center;gap:8px;padding:9px 11px;border-bottom:0.5px solid var(--border);font-size:12px}
 .ps-tx-item:last-child{border-bottom:none}
-.chart-card{background:var(--bg2);border-radius:var(--r);padding:14px;margin-bottom:10px;border:0.5px solid var(--border)}
+.chart-card{background:var(--bg2);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:var(--r);padding:14px;margin-bottom:10px;border:0.5px solid var(--border)}
 
 /* Toast */
 .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--bg3);border:0.5px solid var(--border2);color:var(--text);padding:10px 18px;border-radius:20px;font-size:13px;z-index:9999;opacity:0;transition:all .25s;pointer-events:none;white-space:nowrap;max-width:90vw}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
 .empty{text-align:center;padding:28px 16px;color:var(--muted);font-size:13px}
 
+/* Theme swatches */
+.theme-swatch-row{display:flex;gap:10px;margin-bottom:4px}
+.theme-swatch{width:44px;height:44px;border-radius:12px;cursor:pointer;border:2px solid transparent;transition:border .15s,transform .12s;flex-shrink:0}
+.theme-swatch:active{transform:scale(.9)}
+.theme-swatch.active{border-color:var(--text)}
+
 /* PIN screen */
-.pin-screen{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;overflow-y:auto}
+.pin-screen{position:fixed;inset:0;background:var(--bg);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;overflow-y:auto}
 .pin-screen.hidden{display:none}
 .pin-logo{font-size:36px;margin-bottom:1rem;text-align:center}
 .pin-title{font-size:20px;font-weight:600;margin-bottom:6px;text-align:center}
@@ -212,7 +242,7 @@ input[type="date"]{color-scheme:dark}
 /* Modal base */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;display:flex;align-items:flex-end;justify-content:center;padding:0}
 .modal-overlay.hidden{display:none}
-.modal-sheet{background:var(--bg2);border-radius:24px 24px 0 0;padding:20px 16px 32px;width:100%;max-width:480px;max-height:90dvh;overflow-y:auto;border-top:0.5px solid var(--border2)}
+.modal-sheet{background:var(--bg2);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-radius:24px 24px 0 0;padding:20px 16px 32px;width:100%;max-width:480px;max-height:90dvh;overflow-y:auto;border-top:0.5px solid var(--border2)}
 .modal-handle{width:36px;height:4px;background:var(--bg4);border-radius:2px;margin:0 auto 16px}
 .modal-title{font-size:16px;font-weight:600;margin-bottom:16px;text-align:center}
 
@@ -261,8 +291,8 @@ input[type="date"]{color-scheme:dark}
 /* Tab animations */
 @keyframes tabSlideLeft{from{opacity:0;transform:translateX(22px)}to{opacity:1;transform:translateX(0)}}
 @keyframes tabSlideRight{from{opacity:0;transform:translateX(-22px)}to{opacity:1;transform:translateX(0)}}
-.section.slide-left{animation:tabSlideLeft .22s cubic-bezier(.25,.46,.45,.94)}
-.section.slide-right{animation:tabSlideRight .22s cubic-bezier(.25,.46,.45,.94)}
+.section.slide-left{animation:tabSlideLeft .22s cubic-bezier(.25,.46,.45,.94) both}
+.section.slide-right{animation:tabSlideRight .22s cubic-bezier(.25,.46,.45,.94) both}
 </style>
 </head>
 <body>
@@ -519,6 +549,15 @@ input[type="date"]{color-scheme:dark}
     <div class="modal-handle"></div>
     <div class="modal-title">⚙️ Настройки</div>
 
+    <div style="margin-bottom:16px">
+      <div style="font-size:10px;font-weight:600;color:var(--muted2);letter-spacing:.6px;margin-bottom:10px">ТЕМА</div>
+      <div class="theme-swatch-row" id="theme-swatch-row">
+        <div class="theme-swatch" data-t="obsidian" onclick="setTheme('obsidian')" title="Obsidian" style="background:linear-gradient(145deg,#0a0814,#0d0f1e)"></div>
+        <div class="theme-swatch" data-t="slate"    onclick="setTheme('slate')"    title="Slate Blue" style="background:linear-gradient(145deg,#040c1c,#09162a)"></div>
+        <div class="theme-swatch" data-t="evergreen" onclick="setTheme('evergreen')" title="Evergreen" style="background:linear-gradient(145deg,#030e06,#07180a)"></div>
+        <div class="theme-swatch" data-t="warm"     onclick="setTheme('warm')"     title="Warm Gray" style="background:linear-gradient(145deg,#ede5d8,#f5ede0)"></div>
+      </div>
+    </div>
     <div style="display:flex;flex-direction:column;gap:8px">
       <button onclick="hideSettingsModal();showChangePinModal()" style="width:100%;padding:13px;border-radius:10px;background:var(--bg3);color:var(--text);border:0.5px solid var(--border2);font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;text-align:left">🔑 Сменить PIN</button>
       <button onclick="hideSettingsModal();openCatsModal()" style="width:100%;padding:13px;border-radius:10px;background:var(--bg3);color:var(--text);border:0.5px solid var(--border2);font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;text-align:left">🏷️ Категории</button>
@@ -563,6 +602,24 @@ input[type="date"]{color-scheme:dark}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
 const API = '';
+
+// === Theme system ===
+const THEME_NAMES = ['obsidian','slate','evergreen','warm'];
+let currentTheme = localStorage.getItem('fin-theme') || 'obsidian';
+
+function setTheme(name){
+  currentTheme = name;
+  document.documentElement.setAttribute('data-theme', name);
+  localStorage.setItem('fin-theme', name);
+  // update swatch highlights
+  document.querySelectorAll('.theme-swatch').forEach(el=>{
+    el.classList.toggle('active', el.dataset.t === name);
+  });
+}
+
+// Apply saved theme immediately (before render)
+setTheme(currentTheme);
+
 const COLORS = ['#60a5fa','#4ade80','#fbbf24','#f87171','#a78bfa','#2dd4bf','#fb923c','#e879f9'];
 const PROFILE_COLORS = ['#60a5fa','#f87171','#4ade80','#fbbf24','#a78bfa','#2dd4bf','#fb923c'];
 const SAV_COLORS = ['#60a5fa','#4ade80','#fbbf24','#f87171','#a78bfa','#2dd4bf','#fb923c','#e879f9'];
